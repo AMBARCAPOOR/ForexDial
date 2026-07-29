@@ -40,7 +40,11 @@ class EurUsdComplicationService : SuspendingComplicationDataSourceService() {
         val pip      = priceStr.takeLast(2)   // pip + pipette digits only, no arrow
         val pipColor = if (rising) Color.parseColor("#00e5ff") else Color.parseColor("#FF7700")
 
-        val bw = 432; val bh = 90
+        // EUR/USD is the focal element of the face (v3 spec slot map: Center /
+        // LargeBox), so it is drawn larger than the clock. Sizes set by Ambar
+        // 2026-07-29: 90px body, 96px pip+pipette. Bitmap height must clear the
+        // larger text, and the WFF slot height must match this bitmap.
+        val bw = 432; val bh = 120
         val bitmap = Bitmap.createBitmap(bw, bh, Bitmap.Config.ARGB_8888)
         val canvas = Canvas(bitmap)
 
@@ -48,19 +52,19 @@ class EurUsdComplicationService : SuspendingComplicationDataSourceService() {
 
         val mainPaint = Paint(Paint.ANTI_ALIAS_FLAG).apply {
             typeface = tf
-            textSize = 62f
+            textSize = 90f
             color = Color.WHITE
         }
         val pipPaint = Paint(Paint.ANTI_ALIAS_FLAG).apply {
             typeface = tf
-            textSize = 70f
+            textSize = 96f
             color = pipColor
         }
 
         val mainW  = mainPaint.measureText(main)
         val pipW   = pipPaint.measureText(pip)
         val startX = (bw - mainW - pipW) / 2f
-        val base   = 72f
+        val base   = 94f
 
         canvas.drawText(main, startX, base, mainPaint)
         canvas.drawText(pip, startX + mainW, base + 4f, pipPaint)
