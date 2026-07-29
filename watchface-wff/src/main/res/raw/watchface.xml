@@ -12,5 +12,15 @@
 <Font family="SYNC_TO_DEVICE" size="128" weight="THIN" slant="NORMAL" color="#ffffffff"/>
 </TimeText>
 </DigitalClock>
+<Group x="0" y="0" width="450" height="450" name="date_group">
+<PartText x="0" y="285" width="450" height="50" alpha="255">
+<Variant mode="AMBIENT" target="alpha" value="140"/>
+<Text align="CENTER" ellipsis="FALSE">
+<Font family="SYNC_TO_DEVICE" size="28" weight="BOLD" slant="NORMAL" color="#ff888888">
+<Upper><Template>%s %s %s<Parameter expression="[DAY_OF_WEEK_S]"/><Parameter expression="[DAY]"/><Parameter expression="[MONTH_S]"/></Template></Upper>
+</Font>
+</Text>
+</PartText>
+</Group>
 </Scene>
 </WatchFace>

@@ -16,3 +16,6 @@ build/
 
 # Claude Code session data
 .claude/
+# build artifacts / screenshots
+watchface-wff/*.png
+!watchface-wff/src/**/*.png
