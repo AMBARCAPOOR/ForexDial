@@ -22,5 +22,15 @@
 </Text>
 </PartText>
 </Group>
+<ComplicationSlot slotId="0" name="EURUSD" displayName="EUR/USD" isCustomizable="FALSE" supportedTypes="SMALL_IMAGE EMPTY" x="9" y="85" width="432" height="90" alpha="255">
+<DefaultProviderPolicy primaryProvider="com.reddoor3.forexdial/com.reddoor3.forexdial.wear.complication.EurUsdComplicationService" primaryProviderType="SMALL_IMAGE" defaultSystemProvider="EMPTY" defaultSystemProviderType="EMPTY"/>
+<BoundingBox x="0" y="0" width="432" height="90"/>
+<Complication type="SMALL_IMAGE">
+<PartImage x="0" y="0" width="432" height="90" alpha="255">
+<Image resource="[COMPLICATION.SMALL_IMAGE]"/>
+</PartImage>
+</Complication>
+<Complication type="EMPTY"/>
+</ComplicationSlot>
 </Scene>
 </WatchFace>
