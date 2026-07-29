@@ -2,28 +2,28 @@
 <Metadata key="CLOCK_TYPE" value="DIGITAL"/>
 <Metadata key="PREVIEW_TIME" value="10:08:32"/>
 <Scene backgroundColor="#ff000000">
-<ComplicationSlot slotId="0" name="EURUSD" displayName="EUR/USD" isCustomizable="FALSE" supportedTypes="SMALL_IMAGE EMPTY" x="9" y="105" width="432" height="120" alpha="255">
+<ComplicationSlot slotId="0" name="EURUSD" displayName="EUR/USD" isCustomizable="FALSE" supportedTypes="SMALL_IMAGE EMPTY" x="9" y="100" width="432" height="150" alpha="255">
 <DefaultProviderPolicy primaryProvider="com.reddoor3.forexdial/com.reddoor3.forexdial.wear.complication.EurUsdComplicationService" primaryProviderType="SMALL_IMAGE" defaultSystemProvider="EMPTY" defaultSystemProviderType="EMPTY"/>
-<BoundingBox x="0" y="0" width="432" height="120"/>
+<BoundingBox x="0" y="0" width="432" height="150"/>
 <Complication type="SMALL_IMAGE">
-<PartImage x="0" y="0" width="432" height="120" alpha="255">
+<PartImage x="0" y="0" width="432" height="150" alpha="255">
 <Image resource="[COMPLICATION.SMALL_IMAGE]"/>
 </PartImage>
 </Complication>
 <Complication type="EMPTY"/>
 </ComplicationSlot>
-<DigitalClock x="0" y="232" width="450" height="64">
-<TimeText format="hh:mm:ss" hourFormat="SYNC_TO_DEVICE" align="CENTER" x="0" y="0" width="450" height="64" alpha="255">
+<DigitalClock x="0" y="254" width="450" height="60">
+<TimeText format="hh:mm:ss" hourFormat="SYNC_TO_DEVICE" align="CENTER" x="0" y="0" width="450" height="60" alpha="255">
 <Variant mode="AMBIENT" target="alpha" value="0"/>
 <Font family="SYNC_TO_DEVICE" size="56" weight="BLACK" slant="NORMAL" color="#ffffffff"/>
 </TimeText>
-<TimeText format="hh:mm" hourFormat="SYNC_TO_DEVICE" align="CENTER" x="0" y="0" width="450" height="64" alpha="0">
+<TimeText format="hh:mm" hourFormat="SYNC_TO_DEVICE" align="CENTER" x="0" y="0" width="450" height="60" alpha="0">
 <Variant mode="AMBIENT" target="alpha" value="255"/>
 <Font family="SYNC_TO_DEVICE" size="56" weight="THIN" slant="NORMAL" color="#ffffffff"/>
 </TimeText>
 </DigitalClock>
 <Group x="0" y="0" width="450" height="450" name="date_group">
-<PartText x="0" y="298" width="450" height="38" alpha="255">
+<PartText x="0" y="314" width="450" height="36" alpha="255">
 <Variant mode="AMBIENT" target="alpha" value="140"/>
 <Text align="CENTER" ellipsis="FALSE">
 <Font family="SYNC_TO_DEVICE" size="30" weight="BOLD" slant="NORMAL" color="#ffffffff">

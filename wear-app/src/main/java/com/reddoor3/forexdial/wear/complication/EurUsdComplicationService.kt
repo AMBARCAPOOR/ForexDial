@@ -8,6 +8,7 @@ import androidx.wear.watchface.complications.datasource.ComplicationRequest
 import androidx.wear.watchface.complications.datasource.SuspendingComplicationDataSourceService
 import com.reddoor3.forexdial.wear.DataLayerHelper
 import com.reddoor3.forexdial.wear.WatchConstants
+import kotlin.math.roundToLong
 
 class EurUsdComplicationService : SuspendingComplicationDataSourceService() {
 
@@ -44,7 +45,13 @@ class EurUsdComplicationService : SuspendingComplicationDataSourceService() {
         // LargeBox), so it is drawn larger than the clock. Sizes set by Ambar
         // 2026-07-29: 90px body, 96px pip+pipette. Bitmap height must clear the
         // larger text, and the WFF slot height must match this bitmap.
-        val bw = 432; val bh = 120
+        //
+        // The pips bar is drawn into THIS bitmap rather than its own slot: it
+        // costs no extra complication slot (the budget is 8 and the design needs
+        // all of them), and it guarantees the arrow/pips/percent are computed
+        // from the same price/prev in the same pass, so they can never disagree
+        // with the rate's direction colour or lag it on a separate refresh.
+        val bw = 432; val bh = 150
         val bitmap = Bitmap.createBitmap(bw, bh, Bitmap.Config.ARGB_8888)
         val canvas = Canvas(bitmap)
 
@@ -84,6 +91,25 @@ class EurUsdComplicationService : SuspendingComplicationDataSourceService() {
 
         canvas.drawText(main, startX, base, mainPaint)
         canvas.drawText(pip, startX + mainW, pipBase, pipPaint)
+
+        // Pips bar, e.g. "▲ +52 pips · +0.44%", same direction colour as the
+        // pip digits. Only drawn once a daily-open baseline exists.
+        if (prev > 0f) {
+            val diff  = (price - prev).toDouble()
+            val pips  = (diff * 10_000).roundToLong()
+            val pct   = diff / prev * 100.0
+            val arrow = if (diff >= 0) "▲" else "▼"
+            val bar   = "$arrow ${if (pips >= 0) "+" else ""}$pips pips · " +
+                        "${if (pct >= 0) "+" else ""}${"%.2f".format(pct)}%"
+
+            val barPaint = Paint(Paint.ANTI_ALIAS_FLAG).apply {
+                typeface = tf
+                textSize = 28f
+                color = pipColor
+                textAlign = Paint.Align.CENTER
+            }
+            canvas.drawText(bar, bw / 2f, 136f, barPaint)
+        }
 
         return SmallImageComplicationData.Builder(
             smallImage = SmallImage.Builder(
