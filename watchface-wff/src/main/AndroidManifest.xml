@@ -1,0 +1,28 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- ForexDial Terminal - WFF manifest  v1.2  07_28_2026
+     Matches Google's SimpleDigital sample and the working WFS face on this
+     watch (verified by dumping both manifests).
+     hasCode MUST stay false: Watch Face Format bundles are resource-only.
+     No <service> declaration: WFF faces are found via the format property.
+     ASCII only - PowerShell rewrites of this file have corrupted non-ASCII
+     punctuation before. -->
+<manifest xmlns:android="http://schemas.android.com/apk/res/android">
+
+    <uses-feature android:name="android.hardware.type.watch"/>
+
+    <application
+        android:label="@string/watch_face_name"
+        android:hasCode="false"
+        android:allowBackup="true">
+
+        <meta-data
+            android:name="com.google.android.wearable.standalone"
+            android:value="true"/>
+
+        <property
+            android:name="com.google.wear.watchface.format.version"
+            android:value="1"/>
+
+    </application>
+
+</manifest>

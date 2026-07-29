@@ -1,0 +1,171 @@
+<?xml version="1.0" encoding="utf-8"?>
+<manifest xmlns:android="http://schemas.android.com/apk/res/android">
+
+    <uses-feature android:name="android.hardware.type.watch"/>
+
+    <uses-permission android:name="android.permission.WAKE_LOCK"/>
+
+    <application
+        android:allowBackup="false"
+        android:label="@string/app_name"
+        android:supportsRtl="true"
+        android:theme="@android:style/Theme.DeviceDefault">
+
+        <!-- NO watch face service here. This module has Kotlin code, so it can
+             never be a Watch Face Format bundle (hasCode must be false), and
+             Wear OS 6 blocks programmatic watch faces outright. The face lives
+             in :watchface-wff. This module is complication data ONLY. -->
+
+        <service
+            android:name=".wear.ForexDataListenerService"
+            android:exported="true">
+            <intent-filter>
+                <action android:name="com.google.android.gms.wearable.DATA_CHANGED"/>
+            </intent-filter>
+            <meta-data
+                android:name="com.google.android.gms.wearable.DATA_PATH_PREFIXES"
+                android:value="/forexdial/"/>
+        </service>
+
+        <service
+            android:name=".wear.complication.EurUsdComplicationService"
+            android:exported="true"
+            android:label="@string/comp_eurusd_label">
+            <intent-filter>
+                <action android:name="androidx.wear.watchface.complications.ACTION_COMPLICATION_UPDATE_REQUEST"/>
+            </intent-filter>
+            <intent-filter>
+                <action android:name="android.support.wearable.complications.ACTION_COMPLICATION_UPDATE_REQUEST"/>
+            </intent-filter>
+            <meta-data android:name="android.support.wearable.complications.SUPPORTED_TYPES" android:value="SMALL_IMAGE,LONG_TEXT,SHORT_TEXT"/>
+            <meta-data android:name="android.support.wearable.complications.UPDATE_PERIOD_SECONDS" android:value="300"/>
+        </service>
+
+        <service
+            android:name=".wear.complication.DxyComplicationService"
+            android:exported="true"
+            android:label="@string/comp_dxy_label">
+            <intent-filter>
+                <action android:name="androidx.wear.watchface.complications.ACTION_COMPLICATION_UPDATE_REQUEST"/>
+            </intent-filter>
+            <intent-filter>
+                <action android:name="android.support.wearable.complications.ACTION_COMPLICATION_UPDATE_REQUEST"/>
+            </intent-filter>
+            <meta-data android:name="android.support.wearable.complications.SUPPORTED_TYPES" android:value="SHORT_TEXT"/>
+            <meta-data android:name="android.support.wearable.complications.UPDATE_PERIOD_SECONDS" android:value="300"/>
+        </service>
+
+        <service
+            android:name=".wear.complication.BtcComplicationService"
+            android:exported="true"
+            android:label="@string/comp_btc_label">
+            <intent-filter>
+                <action android:name="androidx.wear.watchface.complications.ACTION_COMPLICATION_UPDATE_REQUEST"/>
+            </intent-filter>
+            <intent-filter>
+                <action android:name="android.support.wearable.complications.ACTION_COMPLICATION_UPDATE_REQUEST"/>
+            </intent-filter>
+            <meta-data android:name="android.support.wearable.complications.SUPPORTED_TYPES" android:value="SHORT_TEXT"/>
+            <meta-data android:name="android.support.wearable.complications.UPDATE_PERIOD_SECONDS" android:value="300"/>
+        </service>
+
+        <service
+            android:name=".wear.complication.NyseSessionComplicationService"
+            android:exported="true"
+            android:label="@string/comp_nyse_label">
+            <intent-filter>
+                <action android:name="androidx.wear.watchface.complications.ACTION_COMPLICATION_UPDATE_REQUEST"/>
+            </intent-filter>
+            <intent-filter>
+                <action android:name="android.support.wearable.complications.ACTION_COMPLICATION_UPDATE_REQUEST"/>
+            </intent-filter>
+            <meta-data android:name="android.support.wearable.complications.SUPPORTED_TYPES" android:value="SMALL_IMAGE,SHORT_TEXT"/>
+            <meta-data android:name="android.support.wearable.complications.UPDATE_PERIOD_SECONDS" android:value="60"/>
+        </service>
+
+        <service
+            android:name=".wear.complication.XetraSessionComplicationService"
+            android:exported="true"
+            android:label="@string/comp_xetra_label">
+            <intent-filter>
+                <action android:name="androidx.wear.watchface.complications.ACTION_COMPLICATION_UPDATE_REQUEST"/>
+            </intent-filter>
+            <intent-filter>
+                <action android:name="android.support.wearable.complications.ACTION_COMPLICATION_UPDATE_REQUEST"/>
+            </intent-filter>
+            <meta-data android:name="android.support.wearable.complications.SUPPORTED_TYPES" android:value="SMALL_IMAGE,SHORT_TEXT"/>
+            <meta-data android:name="android.support.wearable.complications.UPDATE_PERIOD_SECONDS" android:value="60"/>
+        </service>
+
+        <service
+            android:name=".wear.complication.LseSessionComplicationService"
+            android:exported="true"
+            android:label="@string/comp_lse_label">
+            <intent-filter>
+                <action android:name="androidx.wear.watchface.complications.ACTION_COMPLICATION_UPDATE_REQUEST"/>
+            </intent-filter>
+            <intent-filter>
+                <action android:name="android.support.wearable.complications.ACTION_COMPLICATION_UPDATE_REQUEST"/>
+            </intent-filter>
+            <meta-data android:name="android.support.wearable.complications.SUPPORTED_TYPES" android:value="SMALL_IMAGE,SHORT_TEXT"/>
+            <meta-data android:name="android.support.wearable.complications.UPDATE_PERIOD_SECONDS" android:value="60"/>
+        </service>
+
+        <service
+            android:name=".wear.complication.YieldSpreadComplicationService"
+            android:exported="true"
+            android:label="@string/comp_yield_label">
+            <intent-filter>
+                <action android:name="androidx.wear.watchface.complications.ACTION_COMPLICATION_UPDATE_REQUEST"/>
+            </intent-filter>
+            <intent-filter>
+                <action android:name="android.support.wearable.complications.ACTION_COMPLICATION_UPDATE_REQUEST"/>
+            </intent-filter>
+            <meta-data android:name="android.support.wearable.complications.SUPPORTED_TYPES" android:value="SHORT_TEXT"/>
+            <meta-data android:name="android.support.wearable.complications.UPDATE_PERIOD_SECONDS" android:value="300"/>
+        </service>
+
+        <service
+            android:name=".wear.complication.EurUsdPipComplicationService"
+            android:exported="true"
+            android:label="@string/comp_eurusd_pip_label">
+            <intent-filter>
+                <action android:name="androidx.wear.watchface.complications.ACTION_COMPLICATION_UPDATE_REQUEST"/>
+            </intent-filter>
+            <intent-filter>
+                <action android:name="android.support.wearable.complications.ACTION_COMPLICATION_UPDATE_REQUEST"/>
+            </intent-filter>
+            <meta-data android:name="android.support.wearable.complications.SUPPORTED_TYPES" android:value="SHORT_TEXT"/>
+            <meta-data android:name="android.support.wearable.complications.UPDATE_PERIOD_SECONDS" android:value="300"/>
+        </service>
+
+        <service
+            android:name=".wear.complication.EurUsdPipsComplicationService"
+            android:exported="true"
+            android:label="@string/comp_eurusd_pips_label">
+            <intent-filter>
+                <action android:name="androidx.wear.watchface.complications.ACTION_COMPLICATION_UPDATE_REQUEST"/>
+            </intent-filter>
+            <intent-filter>
+                <action android:name="android.support.wearable.complications.ACTION_COMPLICATION_UPDATE_REQUEST"/>
+            </intent-filter>
+            <meta-data android:name="android.support.wearable.complications.SUPPORTED_TYPES" android:value="LONG_TEXT"/>
+            <meta-data android:name="android.support.wearable.complications.UPDATE_PERIOD_SECONDS" android:value="300"/>
+        </service>
+
+        <service
+            android:name=".wear.complication.YieldDirectionComplicationService"
+            android:exported="true"
+            android:label="@string/comp_yield_dir_label">
+            <intent-filter>
+                <action android:name="androidx.wear.watchface.complications.ACTION_COMPLICATION_UPDATE_REQUEST"/>
+            </intent-filter>
+            <intent-filter>
+                <action android:name="android.support.wearable.complications.ACTION_COMPLICATION_UPDATE_REQUEST"/>
+            </intent-filter>
+            <meta-data android:name="android.support.wearable.complications.SUPPORTED_TYPES" android:value="SHORT_TEXT"/>
+            <meta-data android:name="android.support.wearable.complications.UPDATE_PERIOD_SECONDS" android:value="300"/>
+        </service>
+
+    </application>
+</manifest>

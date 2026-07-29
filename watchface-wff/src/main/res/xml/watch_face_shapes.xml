@@ -1,0 +1,9 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- THIS is the file that makes a WFF face discoverable. It maps the shape to
+     the raw watchface document. Without it the resolver has nothing to resolve
+     and rejects the package with:
+       DeclarativeWatchFaceResolver: could not be parsed - Resource ID #0x0
+     width/height MUST match the <WatchFace> element in res/raw/watchface.xml. -->
+<WatchFaces>
+    <WatchFace file="@raw/watchface" width="450" height="450" shape="CIRCLE"/>
+</WatchFaces>

@@ -1,0 +1,3 @@
+-keep class com.reddoor3.forexdial.complication.** { *; }
+-keep class androidx.wear.watchface.complications.** { *; }
+-dontwarn com.google.android.wearable.**

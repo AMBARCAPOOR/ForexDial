@@ -1,0 +1,18 @@
+*.iml
+.gradle
+/local.properties
+/.idea
+.DS_Store
+/captures
+.externalNativeBuild
+.cxx
+*.keystore
+
+# Build outputs - must be "build/" not "/build" so it matches every module,
+# otherwise wear-app/build, watchface-wff/build etc. all get committed.
+build/
+.gradle/
+.kotlin/
+
+# Claude Code session data
+.claude/
