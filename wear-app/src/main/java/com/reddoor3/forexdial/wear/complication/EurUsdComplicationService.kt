@@ -66,8 +66,24 @@ class EurUsdComplicationService : SuspendingComplicationDataSourceService() {
         val startX = (bw - mainW - pipW) / 2f
         val base   = 94f
 
+        // The pip digits are larger than the body, so they must be aligned on a
+        // shared CENTRE LINE, not a shared baseline. On a shared baseline the
+        // taller glyphs only grow upward and read as sitting too high.
+        // Measure real glyph bounds (digits have no descenders, so font metrics
+        // would overstate the box) and offset the pip baseline so both blocks
+        // share the same vertical midpoint.
+        val mainBounds = Rect()
+        val pipBounds  = Rect()
+        mainPaint.getTextBounds(main, 0, main.length, mainBounds)
+        pipPaint.getTextBounds(pip, 0, pip.length, pipBounds)
+
+        // Glyph midpoint relative to the baseline (negative = above it).
+        val mainMid = (mainBounds.top + mainBounds.bottom) / 2f
+        val pipMid  = (pipBounds.top + pipBounds.bottom) / 2f
+        val pipBase = base + (mainMid - pipMid)
+
         canvas.drawText(main, startX, base, mainPaint)
-        canvas.drawText(pip, startX + mainW, base + 4f, pipPaint)
+        canvas.drawText(pip, startX + mainW, pipBase, pipPaint)
 
         return SmallImageComplicationData.Builder(
             smallImage = SmallImage.Builder(
