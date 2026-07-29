@@ -49,17 +49,17 @@ class TopRowComplicationService : SuspendingComplicationDataSourceService() {
             else    -> Color.LTGRAY
         }
 
+        // Sizes set by Ambar 2026-07-29: labels +50% (14->21), values +20% (22->26).
         fun labelPaint(color: Int) = Paint(Paint.ANTI_ALIAS_FLAG).apply {
-            typeface = tfLight; textSize = 14f; this.color = color; textAlign = Paint.Align.CENTER
+            typeface = tfLight; textSize = 21f; this.color = color; textAlign = Paint.Align.CENTER
         }
         fun valuePaint(color: Int) = Paint(Paint.ANTI_ALIAS_FLAG).apply {
-            typeface = tf; textSize = 22f; this.color = color; textAlign = Paint.Align.CENTER
+            typeface = tf; textSize = 26f; this.color = color; textAlign = Paint.Align.CENTER
         }
 
-        // Kept closer to center than a first pass (0.17/0.83): this row sits
-        // near the top of a circular face and wide text clips against the
-        // bezel at the edges, same lesson as the session-circle row below.
-        val xDxy = bw * 0.22f; val xYield = bw * 0.5f; val xBtc = bw * 0.78f
+        // Moved in toward centre by 1/4 of the prior offset from 0.5
+        // (0.28 -> 0.21), per Ambar 2026-07-29.
+        val xDxy = bw * 0.29f; val xYield = bw * 0.5f; val xBtc = bw * 0.71f
 
         canvas.drawText("DXY", xDxy, 18f, labelPaint(Color.parseColor("#85BB65")))
         canvas.drawText("YIELD", xYield, 18f, labelPaint(Color.parseColor("#C8A84B")))
