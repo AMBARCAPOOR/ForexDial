@@ -41,15 +41,33 @@ class ForexSyncWorker(context: Context, params: WorkerParameters) : CoroutineWor
         // Fetched once per calendar day; Frankfurter returns nearest prior business day.
         val today = LocalDate.now().format(DateTimeFormatter.ISO_LOCAL_DATE)
         val prevEurUsd: Float = if (prefs.getString("baseline_date", null) != today) {
-            val yday = LocalDate.now().minusDays(1).format(DateTimeFormatter.ISO_LOCAL_DATE)
-            val base = runCatching { FrankfurterClient.getRatesForDate(yday).eurUsd.toFloat() }
-                .getOrNull() ?: forex?.eurUsd?.toFloat() ?: 0f
+            // Walk back day by day to the most recent session that actually has a
+            // rate. minusDays(1) alone lands on Sunday every Monday, and on
+            // holidays, where ECB publishes nothing.
+            var base = 0f
+            var probe = LocalDate.now().minusDays(1)
+            repeat(5) {
+                if (base == 0f) {
+                    base = runCatching {
+                        FrankfurterClient.getRatesForDate(
+                            probe.format(DateTimeFormatter.ISO_LOCAL_DATE)
+                        ).eurUsd.toFloat()
+                    }.getOrNull() ?: 0f
+                    if (base == 0f) probe = probe.minusDays(1)
+                }
+            }
+            // NEVER fall back to today's live price. That makes baseline == price,
+            // which renders as a confident "+0 pips / +0.00%" - indistinguishable
+            // from a genuinely flat market. A fabricated value is worse than a
+            // missing one. 0f means "unknown"; the watch hides the pips bar when
+            // prev <= 0, so the failure is visible instead of silent.
             if (base != 0f) {
                 prefs.edit().putString("baseline_date", today).putFloat("baseline_eurusd", base).apply()
             }
             base
         } else {
-            prefs.getFloat("baseline_eurusd", forex?.eurUsd?.toFloat() ?: 0f)
+            // Same rule: no baseline means 0f, not today's price.
+            prefs.getFloat("baseline_eurusd", 0f)
         }
 
         return@withContext try {

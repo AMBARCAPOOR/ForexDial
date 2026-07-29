@@ -32,5 +32,69 @@
 </Text>
 </PartText>
 </Group>
+<!-- Battery candle. Body outline fixed; fill height/y driven live by
+     [BATTERY_PERCENT] via Transform (verified empirically 2026-07-29 - the
+     mechanism is undocumented in prose docs, confirmed by direct device test).
+     Colour bands per locked design: >50 cyan, 20-50 amber, <20 red.
+     Position is provisional - left of the EUR/USD block, TBD pending review.
+
+     STRUCTURAL NOTE: PartDraw's content model is DrawElement only (Rectangle/
+     Ellipse/Line/Arc). Condition, PartText etc. are NOT valid PartDraw children -
+     nesting them there fails silently (invalid children are dropped, no error,
+     no crash), which cost a cycle. Condition and PartText must be siblings of
+     PartDraw, both living directly under this Group. -->
+<Group x="0" y="0" width="450" height="450" name="battery_group">
+<PartDraw x="65" y="245" width="40" height="90">
+<Rectangle x="0" y="0" width="40" height="90">
+<Stroke color="#ff888888" thickness="2"/>
+</Rectangle>
+</PartDraw>
+<Condition>
+<Expressions>
+<Expression name="batt_hi">[BATTERY_PERCENT] - 50</Expression>
+</Expressions>
+<Compare expression="batt_hi">
+<PartDraw x="65" y="245" width="40" height="90">
+<Rectangle x="2" y="88" width="36" height="0">
+<Transform target="height" value="86 * [BATTERY_PERCENT] / 100"/>
+<Transform target="y" value="90 - (86 * [BATTERY_PERCENT] / 100)"/>
+<Fill color="#ff00e5ff"/>
+</Rectangle>
+</PartDraw>
+</Compare>
+<Default>
+<Condition>
+<Expressions>
+<Expression name="batt_mid">[BATTERY_PERCENT] - 20</Expression>
+</Expressions>
+<Compare expression="batt_mid">
+<PartDraw x="65" y="245" width="40" height="90">
+<Rectangle x="2" y="88" width="36" height="0">
+<Transform target="height" value="86 * [BATTERY_PERCENT] / 100"/>
+<Transform target="y" value="90 - (86 * [BATTERY_PERCENT] / 100)"/>
+<Fill color="#ffFF9520"/>
+</Rectangle>
+</PartDraw>
+</Compare>
+<Default>
+<PartDraw x="65" y="245" width="40" height="90">
+<Rectangle x="2" y="88" width="36" height="0">
+<Transform target="height" value="86 * [BATTERY_PERCENT] / 100"/>
+<Transform target="y" value="90 - (86 * [BATTERY_PERCENT] / 100)"/>
+<Fill color="#ffFF4444"/>
+</Rectangle>
+</PartDraw>
+</Default>
+</Condition>
+</Default>
+</Condition>
+<PartText x="65" y="280" width="40" height="24">
+<Text align="CENTER" ellipsis="FALSE">
+<Font family="SYNC_TO_DEVICE" size="16" weight="BOLD" slant="NORMAL" color="#ffffffff">
+<Template>%s<Parameter expression="[BATTERY_PERCENT]"/></Template>
+</Font>
+</Text>
+</PartText>
+</Group>
 </Scene>
 </WatchFace>
