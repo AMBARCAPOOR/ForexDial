@@ -53,12 +53,17 @@ class SessionRowComplicationService : SuspendingComplicationDataSourceService() 
         // already carries that information, the text was redundant. Freed
         // space used to double the exchange label (13->26) and grow the
         // time (24->32).
+        // Ambar 2026-07-30: "XETRA" (5 letters) is wider than "LSE"/"NYSE" at
+        // the same size, so it was poking slightly outside its circle. Sized
+        // per-exchange rather than dropping all three - only XETRA needed to
+        // shrink, LSE/NYSE stay at the full 26.
         listOf(
-            Triple(ZoneId.of("Europe/Berlin"),    bw * 0.28f, MarketSessionCalculator.getXetraStatus()) to "XETRA",
-            Triple(ZoneId.of("Europe/London"),     bw * 0.5f, MarketSessionCalculator.getLseStatus()) to "LSE",
-            Triple(ZoneId.of("America/New_York"), bw * 0.72f, MarketSessionCalculator.getNyseStatus()) to "NYSE"
-        ).forEach { (triple, exchange) ->
+            Triple(ZoneId.of("Europe/Berlin"),    bw * 0.28f, MarketSessionCalculator.getXetraStatus()) to Pair("XETRA", 22f),
+            Triple(ZoneId.of("Europe/London"),     bw * 0.5f, MarketSessionCalculator.getLseStatus()) to Pair("LSE", 26f),
+            Triple(ZoneId.of("America/New_York"), bw * 0.72f, MarketSessionCalculator.getNyseStatus()) to Pair("NYSE", 26f)
+        ).forEach { (triple, exchangeAndSize) ->
             val (zone, x, status) = triple
+            val (exchange, labelSize) = exchangeAndSize
             val bg = when (status) {
                 SessionStatus.OPEN      -> cOpen
                 SessionStatus.PRE_POST  -> cPre
@@ -68,7 +73,7 @@ class SessionRowComplicationService : SuspendingComplicationDataSourceService() 
 
             canvas.drawText(exchange, x, circY - 12f,
                 Paint(Paint.ANTI_ALIAS_FLAG).apply {
-                    typeface = tfLight; textSize = 26f; color = Color.WHITE; textAlign = Paint.Align.CENTER
+                    typeface = tfLight; textSize = labelSize; color = Color.WHITE; textAlign = Paint.Align.CENTER
                 })
             val local = now.withZoneSameInstant(zone)
             canvas.drawText(local.format(sessFmt), x, circY + 20f,
