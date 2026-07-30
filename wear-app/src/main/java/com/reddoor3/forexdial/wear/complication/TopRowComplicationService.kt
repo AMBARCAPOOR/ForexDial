@@ -62,16 +62,30 @@ class TopRowComplicationService : SuspendingComplicationDataSourceService() {
         // spacing was tuned, so positions widen again - asymmetrically, since
         // BTC's text grows far more ("64k" -> "64009") than DXY's format
         // (unchanged). "doesn't have to be symmetrical" per Ambar.
-        val xDxy = bw * 0.27f; val xYield = bw * 0.5f; val xBtc = bw * 0.75f
+        val xDxy = bw * 0.27f; val xYield = bw * 0.5f; var xBtc = bw * 0.75f
+
+        val yStr = yield?.let { (if (it >= 0f) "+" else "") + "%.4f".format(it) } ?: sentiment
+        val btcStr = if (btc > 0f) "%.0f".format(btc) else null
+
+        // Ambar 2026-07-30: BTC moved left by 25% of the gap between yield's
+        // last digit and BTC's first digit. Measured from the actual glyph
+        // widths (Paint.measureText), not a guessed fixed offset, since both
+        // strings' widths vary with their live values.
+        if (btcStr != null) {
+            val vp = valuePaint(Color.LTGRAY)
+            val yieldRightEdge = xYield + vp.measureText(yStr) / 2f
+            val btcLeftEdge    = xBtc - vp.measureText(btcStr) / 2f
+            val gap = btcLeftEdge - yieldRightEdge
+            xBtc -= gap * 0.25f
+        }
 
         canvas.drawText("DXY", xDxy, 18f, labelPaint(Color.parseColor("#85BB65")))
         canvas.drawText("YIELD", xYield, 18f, labelPaint(Color.parseColor("#C8A84B")))
         canvas.drawText("BTC", xBtc, 18f, labelPaint(Color.parseColor("#FFD700")))
 
         if (dxy > 0f) canvas.drawText("%.2f".format(dxy), xDxy, 42f, valuePaint(Color.LTGRAY))
-        val yStr = yield?.let { (if (it >= 0f) "+" else "") + "%.4f".format(it) } ?: sentiment
         canvas.drawText(yStr, xYield, 42f, valuePaint(sentColor))
-        if (btc > 0f) canvas.drawText("%.0f".format(btc), xBtc, 42f, valuePaint(Color.LTGRAY))
+        if (btcStr != null) canvas.drawText(btcStr, xBtc, 42f, valuePaint(Color.LTGRAY))
 
         return SmallImageComplicationData.Builder(
             smallImage = SmallImage.Builder(image = Icon.createWithBitmap(bitmap), type = SmallImageType.PHOTO).build(),

@@ -49,6 +49,10 @@ class SessionRowComplicationService : SuspendingComplicationDataSourceService() 
         // at all, so there was nothing to check the times against. Added a
         // small exchange label per circle. Three lines now (label/time/status)
         // means the time font shrinks slightly (27->24) to make room.
+        // Ambar 2026-07-30: OP/PR/CL text removed - the dial's fill colour
+        // already carries that information, the text was redundant. Freed
+        // space used to double the exchange label (13->26) and grow the
+        // time (24->32).
         listOf(
             Triple(ZoneId.of("Europe/Berlin"),    bw * 0.28f, MarketSessionCalculator.getXetraStatus()) to "XETRA",
             Triple(ZoneId.of("Europe/London"),     bw * 0.5f, MarketSessionCalculator.getLseStatus()) to "LSE",
@@ -62,19 +66,14 @@ class SessionRowComplicationService : SuspendingComplicationDataSourceService() 
             }
             canvas.drawCircle(x, circY, circR, Paint(Paint.ANTI_ALIAS_FLAG).apply { color = bg })
 
-            canvas.drawText(exchange, x, circY - 19f,
+            canvas.drawText(exchange, x, circY - 12f,
                 Paint(Paint.ANTI_ALIAS_FLAG).apply {
-                    typeface = tfLight; textSize = 13f; color = Color.WHITE; textAlign = Paint.Align.CENTER
+                    typeface = tfLight; textSize = 26f; color = Color.WHITE; textAlign = Paint.Align.CENTER
                 })
             val local = now.withZoneSameInstant(zone)
-            canvas.drawText(local.format(sessFmt), x, circY + 6f,
+            canvas.drawText(local.format(sessFmt), x, circY + 20f,
                 Paint(Paint.ANTI_ALIAS_FLAG).apply {
-                    typeface = tf; textSize = 24f; color = Color.WHITE; textAlign = Paint.Align.CENTER
-                })
-            val label = when (status) { SessionStatus.OPEN -> "OP"; SessionStatus.PRE_POST -> "PR"; SessionStatus.CLOSED -> "CL" }
-            canvas.drawText(label, x, circY + 28f,
-                Paint(Paint.ANTI_ALIAS_FLAG).apply {
-                    typeface = tfLight; textSize = 15f; color = Color.WHITE; alpha = 220; textAlign = Paint.Align.CENTER
+                    typeface = tf; textSize = 32f; color = Color.WHITE; textAlign = Paint.Align.CENTER
                 })
         }
 
