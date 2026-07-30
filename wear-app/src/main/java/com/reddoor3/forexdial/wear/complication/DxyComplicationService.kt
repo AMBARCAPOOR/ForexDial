@@ -14,9 +14,9 @@ class DxyComplicationService : SuspendingComplicationDataSourceService() {
 
     override suspend fun onComplicationRequest(request: ComplicationRequest): ComplicationData? {
         val prefs = getSharedPreferences(WatchConstants.PREFS, Context.MODE_PRIVATE)
-        if (prefs.getFloat(WatchConstants.KEY_DXY, 0f) == 0f) {
-            DataLayerHelper.refreshFromDataLayer(this)
-        }
+        // ALWAYS refresh - see EurUsdComplicationService for why gating on
+        // ==0f was the actual bug (stale-but-present values never refreshed).
+        DataLayerHelper.refreshFromDataLayer(this)
         val price = prefs.getFloat(WatchConstants.KEY_DXY, 0f)
         return if (price != 0f) build("%.2f".format(price)) else null
     }

@@ -2,6 +2,7 @@ package com.reddoor3.forexdial.wear.complication
 
 import android.content.Context
 import android.graphics.*
+import android.util.Log
 import android.graphics.drawable.Icon
 import androidx.wear.watchface.complications.data.*
 import androidx.wear.watchface.complications.datasource.ComplicationRequest
@@ -19,10 +20,17 @@ class EurUsdComplicationService : SuspendingComplicationDataSourceService() {
         }
 
     override suspend fun onComplicationRequest(request: ComplicationRequest): ComplicationData? {
+        Log.d("FDD_EurUsdComp", "onComplicationRequest: ENTER type=${request.complicationType}")
         val prefs = getSharedPreferences(WatchConstants.PREFS, Context.MODE_PRIVATE)
-        if (prefs.getFloat(WatchConstants.KEY_EURUSD, 0f) == 0f) {
-            DataLayerHelper.refreshFromDataLayer(this)
-        }
+        // ALWAYS pull from the Data Layer directly, not just when the cached
+        // value is missing (0f). The phone's "wake up and check" push
+        // notification is unreliable under normal Android background
+        // restrictions (confirmed 2026-07-29: GMS logs "Failed to deliver
+        // message" for every app on the watch, not just this one), but the
+        // DataItem itself IS reliably stored - refreshFromDataLayer queries
+        // that storage directly. Gating on ==0f meant stale-but-present
+        // values NEVER got refreshed, which was the actual bug.
+        DataLayerHelper.refreshFromDataLayer(this)
         val price = prefs.getFloat(WatchConstants.KEY_EURUSD, 0f)
         val prev  = prefs.getFloat(WatchConstants.KEY_EURUSD_PREV, 0f)
         if (price == 0f) return null

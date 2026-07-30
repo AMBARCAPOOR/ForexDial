@@ -18,9 +18,9 @@ class YieldDirectionComplicationService : SuspendingComplicationDataSourceServic
 
     override suspend fun onComplicationRequest(request: ComplicationRequest): ComplicationData? {
         val prefs = getSharedPreferences(WatchConstants.PREFS, Context.MODE_PRIVATE)
-        if (prefs.getString(WatchConstants.KEY_SENTIMENT, null) == null) {
-            DataLayerHelper.refreshFromDataLayer(this)
-        }
+        // ALWAYS refresh - see EurUsdComplicationService for why gating on
+        // "missing" was the actual bug (stale-but-present values never refreshed).
+        DataLayerHelper.refreshFromDataLayer(this)
         val sent = prefs.getString(WatchConstants.KEY_SENTIMENT, null) ?: return null
         val flag = when (sent) {
             "LONG"  -> "L"

@@ -44,11 +44,17 @@ class SessionRowComplicationService : SuspendingComplicationDataSourceService() 
         // very first pass (0.20/0.80). Text scaled with the radius.
         val circR = 42f; val circY = bh / 2f
 
+        // Ambar 2026-07-29: could not tell which circle was which exchange -
+        // the dials showed local time + OP/PR/CL status but NO exchange name
+        // at all, so there was nothing to check the times against. Added a
+        // small exchange label per circle. Three lines now (label/time/status)
+        // means the time font shrinks slightly (27->24) to make room.
         listOf(
-            Triple(ZoneId.of("Europe/Berlin"),    bw * 0.28f, MarketSessionCalculator.getXetraStatus()),
-            Triple(ZoneId.of("Europe/London"),     bw * 0.5f, MarketSessionCalculator.getLseStatus()),
-            Triple(ZoneId.of("America/New_York"), bw * 0.72f, MarketSessionCalculator.getNyseStatus())
-        ).forEach { (zone, x, status) ->
+            Triple(ZoneId.of("Europe/Berlin"),    bw * 0.28f, MarketSessionCalculator.getXetraStatus()) to "XETRA",
+            Triple(ZoneId.of("Europe/London"),     bw * 0.5f, MarketSessionCalculator.getLseStatus()) to "LSE",
+            Triple(ZoneId.of("America/New_York"), bw * 0.72f, MarketSessionCalculator.getNyseStatus()) to "NYSE"
+        ).forEach { (triple, exchange) ->
+            val (zone, x, status) = triple
             val bg = when (status) {
                 SessionStatus.OPEN      -> cOpen
                 SessionStatus.PRE_POST  -> cPre
@@ -56,15 +62,19 @@ class SessionRowComplicationService : SuspendingComplicationDataSourceService() 
             }
             canvas.drawCircle(x, circY, circR, Paint(Paint.ANTI_ALIAS_FLAG).apply { color = bg })
 
-            val local = now.withZoneSameInstant(zone)
-            canvas.drawText(local.format(sessFmt), x, circY - 2f,
+            canvas.drawText(exchange, x, circY - 19f,
                 Paint(Paint.ANTI_ALIAS_FLAG).apply {
-                    typeface = tf; textSize = 27f; color = Color.WHITE; textAlign = Paint.Align.CENTER
+                    typeface = tfLight; textSize = 13f; color = Color.WHITE; textAlign = Paint.Align.CENTER
+                })
+            val local = now.withZoneSameInstant(zone)
+            canvas.drawText(local.format(sessFmt), x, circY + 6f,
+                Paint(Paint.ANTI_ALIAS_FLAG).apply {
+                    typeface = tf; textSize = 24f; color = Color.WHITE; textAlign = Paint.Align.CENTER
                 })
             val label = when (status) { SessionStatus.OPEN -> "OP"; SessionStatus.PRE_POST -> "PR"; SessionStatus.CLOSED -> "CL" }
-            canvas.drawText(label, x, circY + 23f,
+            canvas.drawText(label, x, circY + 28f,
                 Paint(Paint.ANTI_ALIAS_FLAG).apply {
-                    typeface = tfLight; textSize = 20f; color = Color.WHITE; alpha = 220; textAlign = Paint.Align.CENTER
+                    typeface = tfLight; textSize = 15f; color = Color.WHITE; alpha = 220; textAlign = Paint.Align.CENTER
                 })
         }
 

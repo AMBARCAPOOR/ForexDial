@@ -25,9 +25,9 @@ class TopRowComplicationService : SuspendingComplicationDataSourceService() {
 
     override suspend fun onComplicationRequest(request: ComplicationRequest): ComplicationData? {
         val prefs = getSharedPreferences(WatchConstants.PREFS, Context.MODE_PRIVATE)
-        if (prefs.getFloat(WatchConstants.KEY_DXY, 0f) == 0f) {
-            DataLayerHelper.refreshFromDataLayer(this)
-        }
+        // ALWAYS refresh - see EurUsdComplicationService for why gating on
+        // ==0f was the actual bug (stale-but-present values never refreshed).
+        DataLayerHelper.refreshFromDataLayer(this)
         val dxy   = prefs.getFloat(WatchConstants.KEY_DXY, 0f)
         val yield = prefs.getFloat(WatchConstants.KEY_YIELD_SPREAD, Float.MAX_VALUE)
         val sent  = prefs.getString(WatchConstants.KEY_SENTIMENT, "NEUT") ?: "NEUT"

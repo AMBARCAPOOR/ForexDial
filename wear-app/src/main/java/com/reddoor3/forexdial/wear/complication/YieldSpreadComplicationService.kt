@@ -13,9 +13,9 @@ class YieldSpreadComplicationService : SuspendingComplicationDataSourceService()
 
     override suspend fun onComplicationRequest(request: ComplicationRequest): ComplicationData? {
         val prefs = getSharedPreferences(WatchConstants.PREFS, Context.MODE_PRIVATE)
-        if (!prefs.contains(WatchConstants.KEY_YIELD_SPREAD)) {
-            DataLayerHelper.refreshFromDataLayer(this)
-        }
+        // ALWAYS refresh - see EurUsdComplicationService for why gating on
+        // "missing" was the actual bug (stale-but-present values never refreshed).
+        DataLayerHelper.refreshFromDataLayer(this)
         val spread = prefs.getFloat(WatchConstants.KEY_YIELD_SPREAD, Float.MAX_VALUE)
         return if (spread != Float.MAX_VALUE) build(spread) else null
     }
