@@ -57,21 +57,21 @@ class TopRowComplicationService : SuspendingComplicationDataSourceService() {
             typeface = tf; textSize = 26f; this.color = color; textAlign = Paint.Align.CENTER
         }
 
-        // Moved in toward centre by 1/4 of the prior offset from 0.5
-        // (0.28 -> 0.21), per Ambar 2026-07-29.
-        val xDxy = bw * 0.29f; val xYield = bw * 0.5f; val xBtc = bw * 0.71f
+        // Ambar 2026-07-30: yield to 4dp, BTC to full 5-digit price (no "k"
+        // rounding). Both are now visibly wider than when the 0.29/0.71
+        // spacing was tuned, so positions widen again - asymmetrically, since
+        // BTC's text grows far more ("64k" -> "64009") than DXY's format
+        // (unchanged). "doesn't have to be symmetrical" per Ambar.
+        val xDxy = bw * 0.27f; val xYield = bw * 0.5f; val xBtc = bw * 0.75f
 
         canvas.drawText("DXY", xDxy, 18f, labelPaint(Color.parseColor("#85BB65")))
         canvas.drawText("YIELD", xYield, 18f, labelPaint(Color.parseColor("#C8A84B")))
         canvas.drawText("BTC", xBtc, 18f, labelPaint(Color.parseColor("#FFD700")))
 
         if (dxy > 0f) canvas.drawText("%.2f".format(dxy), xDxy, 42f, valuePaint(Color.LTGRAY))
-        val yStr = yield?.let { (if (it >= 0f) "+" else "") + "%.2f".format(it) } ?: sentiment
+        val yStr = yield?.let { (if (it >= 0f) "+" else "") + "%.4f".format(it) } ?: sentiment
         canvas.drawText(yStr, xYield, 42f, valuePaint(sentColor))
-        if (btc > 0f) {
-            val btcStr = if (btc >= 1_000f) "${"%.0f".format(btc / 1_000f)}k" else "%.0f".format(btc)
-            canvas.drawText(btcStr, xBtc, 42f, valuePaint(Color.LTGRAY))
-        }
+        if (btc > 0f) canvas.drawText("%.0f".format(btc), xBtc, 42f, valuePaint(Color.LTGRAY))
 
         return SmallImageComplicationData.Builder(
             smallImage = SmallImage.Builder(image = Icon.createWithBitmap(bitmap), type = SmallImageType.PHOTO).build(),
