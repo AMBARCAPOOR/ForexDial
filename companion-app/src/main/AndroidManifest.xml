@@ -141,6 +141,20 @@
                 android:value="300"/>
         </service>
 
+        <!-- Tap-to-refresh (2026-07-30): receives the watch's "please sync
+             now" message and runs an expedited sync. -->
+        <service
+            android:name=".RefreshRequestListenerService"
+            android:exported="true">
+            <intent-filter>
+                <action android:name="com.google.android.gms.wearable.MESSAGE_RECEIVED"/>
+                <data
+                    android:scheme="wear"
+                    android:host="*"
+                    android:pathPrefix="/forexdial/request_sync"/>
+            </intent-filter>
+        </service>
+
         <!-- Boot receiver to reschedule WorkManager after reboot -->
         <receiver
             android:name=".BootReceiver"

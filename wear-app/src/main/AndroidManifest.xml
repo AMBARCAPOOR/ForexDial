@@ -16,6 +16,17 @@
              Wear OS 6 blocks programmatic watch faces outright. The face lives
              in :watchface-wff. This module is complication data ONLY. -->
 
+        <!-- Tap-to-refresh (2026-07-30). Only ever triggered by this app's own
+             PendingIntent (from a complication tap), never externally -
+             exported="false". -->
+        <receiver
+            android:name=".wear.RefreshRequestReceiver"
+            android:exported="false">
+            <intent-filter>
+                <action android:name="com.reddoor3.forexdial.wear.ACTION_REFRESH"/>
+            </intent-filter>
+        </receiver>
+
         <service
             android:name=".wear.ForexDataListenerService"
             android:exported="true">

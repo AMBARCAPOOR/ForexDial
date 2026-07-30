@@ -1,6 +1,8 @@
 package com.reddoor3.forexdial.wear.complication
 
+import android.app.PendingIntent
 import android.content.Context
+import android.content.Intent
 import android.graphics.*
 import android.util.Log
 import android.graphics.drawable.Icon
@@ -8,6 +10,7 @@ import androidx.wear.watchface.complications.data.*
 import androidx.wear.watchface.complications.datasource.ComplicationRequest
 import androidx.wear.watchface.complications.datasource.SuspendingComplicationDataSourceService
 import com.reddoor3.forexdial.wear.DataLayerHelper
+import com.reddoor3.forexdial.wear.RefreshRequestReceiver
 import com.reddoor3.forexdial.wear.WatchConstants
 import kotlin.math.roundToLong
 
@@ -125,8 +128,18 @@ class EurUsdComplicationService : SuspendingComplicationDataSourceService() {
                 type = SmallImageType.PHOTO
             ).build(),
             contentDescription = PlainComplicationText.Builder("EUR/USD $priceStr").build()
-        ).build()
+        ).setTapAction(refreshTapAction()).build()
     }
+
+    // Tap-to-refresh (2026-07-30): asks the phone for a fresh sync rather
+    // than doing nothing, which was the previous behaviour (confirmed by
+    // grep: no complication anywhere had a TapAction set).
+    private fun refreshTapAction(): PendingIntent =
+        PendingIntent.getBroadcast(
+            this, 0,
+            Intent(this, RefreshRequestReceiver::class.java).setAction(RefreshRequestReceiver.ACTION_REFRESH),
+            PendingIntent.FLAG_UPDATE_CURRENT or PendingIntent.FLAG_IMMUTABLE
+        )
 
     private fun buildForType(type: ComplicationType, text: String): ComplicationData? =
         when (type) {

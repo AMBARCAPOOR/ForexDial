@@ -1,12 +1,15 @@
 package com.reddoor3.forexdial.wear.complication
 
+import android.app.PendingIntent
 import android.content.Context
+import android.content.Intent
 import android.graphics.*
 import android.graphics.drawable.Icon
 import androidx.wear.watchface.complications.data.*
 import androidx.wear.watchface.complications.datasource.ComplicationRequest
 import androidx.wear.watchface.complications.datasource.SuspendingComplicationDataSourceService
 import com.reddoor3.forexdial.wear.DataLayerHelper
+import com.reddoor3.forexdial.wear.RefreshRequestReceiver
 import com.reddoor3.forexdial.wear.WatchConstants
 
 // DXY | YIELD | BTC in one bitmap/one slot rather than three, so the row
@@ -68,15 +71,19 @@ class TopRowComplicationService : SuspendingComplicationDataSourceService() {
         val btcStr = if (btc > 0f) "%.0f".format(btc) else null
 
         // Ambar 2026-07-30: BTC moved left by 25% of the gap between yield's
-        // last digit and BTC's first digit. Measured from the actual glyph
-        // widths (Paint.measureText), not a guessed fixed offset, since both
-        // strings' widths vary with their live values.
+        // last digit and BTC's first digit - twice now (second pass applies
+        // the same 25%-of-remaining-gap operation again, using the gap AFTER
+        // the first shift, not a doubled formula). Measured from actual
+        // glyph widths (Paint.measureText) each time, not a fixed offset,
+        // since both strings' widths vary with their live values.
         if (btcStr != null) {
             val vp = valuePaint(Color.LTGRAY)
-            val yieldRightEdge = xYield + vp.measureText(yStr) / 2f
-            val btcLeftEdge    = xBtc - vp.measureText(btcStr) / 2f
-            val gap = btcLeftEdge - yieldRightEdge
-            xBtc -= gap * 0.25f
+            repeat(2) {
+                val yieldRightEdge = xYield + vp.measureText(yStr) / 2f
+                val btcLeftEdge    = xBtc - vp.measureText(btcStr) / 2f
+                val gap = btcLeftEdge - yieldRightEdge
+                xBtc -= gap * 0.25f
+            }
         }
 
         canvas.drawText("DXY", xDxy, 18f, labelPaint(Color.parseColor("#85BB65")))
@@ -90,6 +97,13 @@ class TopRowComplicationService : SuspendingComplicationDataSourceService() {
         return SmallImageComplicationData.Builder(
             smallImage = SmallImage.Builder(image = Icon.createWithBitmap(bitmap), type = SmallImageType.PHOTO).build(),
             contentDescription = PlainComplicationText.Builder("DXY, yield, BTC").build()
-        ).build()
+        ).setTapAction(refreshTapAction()).build()
     }
+
+    private fun refreshTapAction(): PendingIntent =
+        PendingIntent.getBroadcast(
+            this, 0,
+            Intent(this, RefreshRequestReceiver::class.java).setAction(RefreshRequestReceiver.ACTION_REFRESH),
+            PendingIntent.FLAG_UPDATE_CURRENT or PendingIntent.FLAG_IMMUTABLE
+        )
 }
