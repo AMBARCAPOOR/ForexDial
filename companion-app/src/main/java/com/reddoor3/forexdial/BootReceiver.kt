@@ -14,11 +14,10 @@ class BootReceiver : BroadcastReceiver() {
         if (intent.action != Intent.ACTION_BOOT_COMPLETED) return
         val wm = WorkManager.getInstance(context)
         val net = Constraints.Builder().setRequiredNetworkType(NetworkType.CONNECTED).build()
-        wm.enqueueUniquePeriodicWork(
-            "forex_sync", ExistingPeriodicWorkPolicy.KEEP,
-            PeriodicWorkRequestBuilder<ForexSyncWorker>(15, TimeUnit.MINUTES)
-                .setConstraints(net).build()
-        )
+        // Not periodic - see ForexDialApplication.kt / ForexSyncWorker.kt.
+        // A boot-time reboot kills any pending self-chained request, so this
+        // one-time enqueue is what restarts the 3-minute chain after reboot.
+        wm.enqueue(OneTimeWorkRequestBuilder<ForexSyncWorker>().setConstraints(net).build())
         wm.enqueueUniquePeriodicWork(
             "yield_sync", ExistingPeriodicWorkPolicy.KEEP,
             PeriodicWorkRequestBuilder<YieldSpreadWorker>(15, TimeUnit.MINUTES)

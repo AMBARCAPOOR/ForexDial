@@ -2,6 +2,9 @@ package com.reddoor3.forexdial.work
 
 import android.content.Context
 import androidx.work.CoroutineWorker
+import androidx.work.ExistingWorkPolicy
+import androidx.work.OneTimeWorkRequestBuilder
+import androidx.work.WorkManager
 import androidx.work.WorkerParameters
 import com.google.android.gms.wearable.PutDataMapRequest
 import com.google.android.gms.wearable.Wearable
@@ -11,10 +14,41 @@ import com.reddoor3.forexdial.api.TwelveDataClient
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.tasks.await
 import kotlinx.coroutines.withContext
+import java.util.concurrent.TimeUnit
 
+// Self-chaining instead of PeriodicWorkRequest: WorkManager enforces a hard
+// 15-minute floor on periodic work (PeriodicWorkRequest.MIN_PERIODIC_
+// INTERVAL_MILLIS - confirmed against Android's own docs 2026-07-30), so a
+// genuine 3-minute cadence is only possible by having each run re-enqueue
+// the next one. Chained via a UNIQUE one-time work name with REPLACE, in a
+// `finally` block so the chain continues regardless of whether THIS attempt
+// succeeded or failed - a single bad sync must not silently kill all future
+// ones. 3 min = 480 requests/day against Twelve Data's 800/day free cap
+// (comfortable margin - set by Ambar 2026-07-30).
 class ForexSyncWorker(context: Context, params: WorkerParameters) : CoroutineWorker(context, params) {
 
+    companion object {
+        const val CHAIN_INTERVAL_MINUTES = 3L
+        const val CHAIN_WORK_NAME = "forex_sync_chain"
+    }
+
     override suspend fun doWork(): Result = withContext(Dispatchers.IO) {
+        try {
+            runSync()
+        } finally {
+            scheduleNext()
+        }
+    }
+
+    private fun scheduleNext() {
+        val next = OneTimeWorkRequestBuilder<ForexSyncWorker>()
+            .setInitialDelay(CHAIN_INTERVAL_MINUTES, TimeUnit.MINUTES)
+            .build()
+        WorkManager.getInstance(applicationContext)
+            .enqueueUniqueWork(CHAIN_WORK_NAME, ExistingWorkPolicy.REPLACE, next)
+    }
+
+    private suspend fun runSync(): Result {
         val prefs = applicationContext.getSharedPreferences(Constants.PREFS_NAME, Context.MODE_PRIVATE)
         prefs.edit().putLong("sync_started_ts", System.currentTimeMillis()).apply()
 
@@ -39,9 +73,9 @@ class ForexSyncWorker(context: Context, params: WorkerParameters) : CoroutineWor
             .putString("sync_status",  failures.joinToString(", ").ifEmpty { "All OK" })
             .apply()
 
-        if (forex == null && btc == null) return@withContext Result.retry()
+        if (forex == null && btc == null) return Result.retry()
 
-        return@withContext try {
+        return try {
             val request = PutDataMapRequest.create(Constants.PATH_FOREX).apply {
                 dataMap.putFloat(Constants.WKEY_EURUSD,      forex?.eurUsd?.price?.toFloat() ?: 0f)
                 // NEVER fall back to the live price for the baseline - that makes

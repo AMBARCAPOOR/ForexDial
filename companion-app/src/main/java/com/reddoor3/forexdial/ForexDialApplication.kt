@@ -21,18 +21,19 @@ class ForexDialApplication : Application() {
             .build()
 
         // Immediate one-time pushes so watch has data on first launch (periodic work delays ~15 min)
+        // ForexSyncWorker is NOT periodic (see below) - this single enqueue is
+        // what kicks off its self-chaining 3-minute loop.
         wm.enqueue(OneTimeWorkRequestBuilder<ForexSyncWorker>().setConstraints(netConstraint).build())
         wm.enqueue(OneTimeWorkRequestBuilder<YieldSpreadWorker>().setConstraints(netConstraint).build())
         wm.enqueue(OneTimeWorkRequestBuilder<SunriseSunsetWorker>().setConstraints(netConstraint).build())
 
-        // Forex prices — every 15 minutes (pushes EUR/USD, DXY, BTC to watch)
-        wm.enqueueUniquePeriodicWork(
-            "forex_sync",
-            ExistingPeriodicWorkPolicy.KEEP,
-            PeriodicWorkRequestBuilder<ForexSyncWorker>(15, TimeUnit.MINUTES)
-                .setConstraints(netConstraint)
-                .build()
-        )
+        // Forex prices: NOT scheduled here as PeriodicWorkRequest - WorkManager
+        // enforces a hard 15-minute floor on periodic work, too slow for the
+        // 3-minute cadence Ambar wants (2026-07-30). ForexSyncWorker instead
+        // re-enqueues itself every 3 minutes from inside doWork() (see
+        // ForexSyncWorker.scheduleNext()); the one-time enqueue above starts
+        // that chain. 3 min = 480 Twelve Data requests/day, under the 800/day
+        // free cap.
 
         // Yield spread — every 15 minutes
         wm.enqueueUniquePeriodicWork(
