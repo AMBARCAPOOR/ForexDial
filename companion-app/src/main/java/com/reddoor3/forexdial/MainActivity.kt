@@ -8,6 +8,7 @@ import androidx.appcompat.app.AppCompatActivity
 import androidx.work.Constraints
 import androidx.work.NetworkType
 import androidx.work.OneTimeWorkRequestBuilder
+import androidx.work.OutOfQuotaPolicy
 import androidx.work.WorkManager
 import com.reddoor3.forexdial.work.ForexSyncWorker
 import com.reddoor3.forexdial.work.YieldSpreadWorker
@@ -96,10 +97,24 @@ class MainActivity : AppCompatActivity() {
     }
 
     private fun triggerSync() {
+        // Diagnosed 2026-07-30: the "significant delay" after tapping Sync Now
+        // was because a plain OneTimeWorkRequest is regular background work -
+        // WorkManager is free to batch/delay it under normal Doze/JobScheduler
+        // throttling, same as any other background job. setExpedited() is
+        // Android's actual mechanism for "user just tapped a button, run this
+        // now" (WorkManager 2.7+); RUN_AS_NON_EXPEDITED_WORK_REQUEST falls back
+        // to normal scheduling if the expedited quota is exhausted, so this is
+        // safe to always request.
         val net = Constraints.Builder().setRequiredNetworkType(NetworkType.CONNECTED).build()
         WorkManager.getInstance(applicationContext).apply {
-            enqueue(OneTimeWorkRequestBuilder<ForexSyncWorker>().setConstraints(net).build())
-            enqueue(OneTimeWorkRequestBuilder<YieldSpreadWorker>().setConstraints(net).build())
+            enqueue(OneTimeWorkRequestBuilder<ForexSyncWorker>()
+                .setConstraints(net)
+                .setExpedited(OutOfQuotaPolicy.RUN_AS_NON_EXPEDITED_WORK_REQUEST)
+                .build())
+            enqueue(OneTimeWorkRequestBuilder<YieldSpreadWorker>()
+                .setConstraints(net)
+                .setExpedited(OutOfQuotaPolicy.RUN_AS_NON_EXPEDITED_WORK_REQUEST)
+                .build())
         }
         Toast.makeText(this, "Sync triggered", Toast.LENGTH_SHORT).show()
     }
