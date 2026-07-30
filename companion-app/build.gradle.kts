@@ -1,6 +1,17 @@
+import java.util.Properties
+import java.io.FileInputStream
+
 plugins {
     id("com.android.application")
     id("org.jetbrains.kotlin.android")
+}
+
+// Read secrets from local.properties (gitignored) rather than hardcoding them
+// in source - the Finnhub key was hardcoded in Constants.kt and IS in git
+// history as a result. Not repeating that mistake for the Twelve Data key.
+val localProps = Properties().apply {
+    val f = rootProject.file("local.properties")
+    if (f.exists()) load(FileInputStream(f))
 }
 
 android {
@@ -13,6 +24,12 @@ android {
         targetSdk = 35
         versionCode = 1
         versionName = "1.0"
+        buildConfigField("String", "TWELVE_DATA_API_KEY",
+            "\"${localProps.getProperty("twelveDataApiKey", "")}\"")
+    }
+
+    buildFeatures {
+        buildConfig = true
     }
 
     buildTypes {

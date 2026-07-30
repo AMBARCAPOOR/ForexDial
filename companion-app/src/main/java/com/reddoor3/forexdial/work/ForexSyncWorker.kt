@@ -7,12 +7,10 @@ import com.google.android.gms.wearable.PutDataMapRequest
 import com.google.android.gms.wearable.Wearable
 import com.reddoor3.forexdial.Constants
 import com.reddoor3.forexdial.api.FinnhubClient
-import com.reddoor3.forexdial.api.FrankfurterClient
+import com.reddoor3.forexdial.api.TwelveDataClient
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.tasks.await
 import kotlinx.coroutines.withContext
-import java.time.LocalDate
-import java.time.format.DateTimeFormatter
 
 class ForexSyncWorker(context: Context, params: WorkerParameters) : CoroutineWorker(context, params) {
 
@@ -20,7 +18,13 @@ class ForexSyncWorker(context: Context, params: WorkerParameters) : CoroutineWor
         val prefs = applicationContext.getSharedPreferences(Constants.PREFS_NAME, Context.MODE_PRIVATE)
         prefs.edit().putLong("sync_started_ts", System.currentTimeMillis()).apply()
 
-        val forex = runCatching { FrankfurterClient.getRates() }.getOrNull()
+        // Twelve Data, not Frankfurter: Frankfurter is an ECB reference rate
+        // published once per business day (confirmed 2026-07-29), so it can
+        // never drive intraday direction colouring no matter how it's synced.
+        // One batched call returns EUR/USD's live price AND previous_close
+        // together, plus DXY's whole 6-pair basket - no more day-walking
+        // logic needed to find a baseline.
+        val forex = runCatching { TwelveDataClient.getSnapshot() }.getOrNull()
         val btc   = runCatching { FinnhubClient.getBtc() }.getOrNull()
 
         val failures = listOfNotNull(
@@ -29,53 +33,24 @@ class ForexSyncWorker(context: Context, params: WorkerParameters) : CoroutineWor
         )
 
         prefs.edit()
-            .putFloat("cached_eurusd", forex?.eurUsd?.toFloat() ?: 0f)
-            .putFloat("cached_dxy",    forex?.dxy?.toFloat()    ?: 0f)
-            .putFloat("cached_btc",    btc?.price?.toFloat()    ?: 0f)
+            .putFloat("cached_eurusd", forex?.eurUsd?.price?.toFloat() ?: 0f)
+            .putFloat("cached_dxy",    forex?.dxy?.toFloat()           ?: 0f)
+            .putFloat("cached_btc",    btc?.price?.toFloat()           ?: 0f)
             .putString("sync_status",  failures.joinToString(", ").ifEmpty { "All OK" })
             .apply()
 
         if (forex == null && btc == null) return@withContext Result.retry()
 
-        // Daily baseline: previous day's EUR/USD close for intraday pips calculation.
-        // Fetched once per calendar day; Frankfurter returns nearest prior business day.
-        val today = LocalDate.now().format(DateTimeFormatter.ISO_LOCAL_DATE)
-        val prevEurUsd: Float = if (prefs.getString("baseline_date", null) != today) {
-            // Walk back day by day to the most recent session that actually has a
-            // rate. minusDays(1) alone lands on Sunday every Monday, and on
-            // holidays, where ECB publishes nothing.
-            var base = 0f
-            var probe = LocalDate.now().minusDays(1)
-            repeat(5) {
-                if (base == 0f) {
-                    base = runCatching {
-                        FrankfurterClient.getRatesForDate(
-                            probe.format(DateTimeFormatter.ISO_LOCAL_DATE)
-                        ).eurUsd.toFloat()
-                    }.getOrNull() ?: 0f
-                    if (base == 0f) probe = probe.minusDays(1)
-                }
-            }
-            // NEVER fall back to today's live price. That makes baseline == price,
-            // which renders as a confident "+0 pips / +0.00%" - indistinguishable
-            // from a genuinely flat market. A fabricated value is worse than a
-            // missing one. 0f means "unknown"; the watch hides the pips bar when
-            // prev <= 0, so the failure is visible instead of silent.
-            if (base != 0f) {
-                prefs.edit().putString("baseline_date", today).putFloat("baseline_eurusd", base).apply()
-            }
-            base
-        } else {
-            // Same rule: no baseline means 0f, not today's price.
-            prefs.getFloat("baseline_eurusd", 0f)
-        }
-
         return@withContext try {
             val request = PutDataMapRequest.create(Constants.PATH_FOREX).apply {
-                dataMap.putFloat(Constants.WKEY_EURUSD,      forex?.eurUsd?.toFloat() ?: 0f)
-                dataMap.putFloat(Constants.WKEY_EURUSD_PREV, prevEurUsd)
-                dataMap.putFloat(Constants.WKEY_DXY,         forex?.dxy?.toFloat()    ?: 0f)
-                dataMap.putFloat(Constants.WKEY_BTC,         btc?.price?.toFloat()    ?: 0f)
+                dataMap.putFloat(Constants.WKEY_EURUSD,      forex?.eurUsd?.price?.toFloat() ?: 0f)
+                // NEVER fall back to the live price for the baseline - that makes
+                // prev == price, which renders as a confident "+0 pips / +0.00%",
+                // indistinguishable from a genuinely flat market. 0f means
+                // "unknown"; the watch hides the pips bar when prev <= 0.
+                dataMap.putFloat(Constants.WKEY_EURUSD_PREV, forex?.eurUsd?.previousClose?.toFloat() ?: 0f)
+                dataMap.putFloat(Constants.WKEY_DXY,         forex?.dxy?.toFloat() ?: 0f)
+                dataMap.putFloat(Constants.WKEY_BTC,         btc?.price?.toFloat() ?: 0f)
                 dataMap.putLong("ts", System.currentTimeMillis())
             }.asPutDataRequest().setUrgent()
 
