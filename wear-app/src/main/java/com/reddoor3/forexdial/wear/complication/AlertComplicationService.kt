@@ -45,20 +45,46 @@ class AlertComplicationService : SuspendingComplicationDataSourceService() {
         // there's total control over proportions and it always renders
         // identically. Coloured cyan/orange to match the same up/down
         // convention used everywhere else on the face.
+        //
+        // Ambar 2026-08-05 (round 5): added a bell above the arrow (also
+        // hand-drawn, same reasoning) - the bell means "an alert is active"
+        // generically (fixed gold colour, not direction-coded), the arrow
+        // below it means "which way it crossed" (cyan/orange). Arrow shrunk
+        // vertically (84px -> 70px) to make room without widening the slot
+        // further.
         val bw = 44; val bh = 129
         val bitmap = Bitmap.createBitmap(bw, bh, Bitmap.Config.ARGB_8888)
         if (alertTriggered) {
             val canvas = Canvas(bitmap)
+            val cx = bw / 2f
+
+            val bellPaint = Paint(Paint.ANTI_ALIAS_FLAG).apply {
+                style = Paint.Style.FILL
+                color = Color.parseColor("#FFD700")
+            }
+            val bellTop = 6f; val bellBottom = 36f
+            val bellHalfWidthTop = 3f; val bellHalfWidthBottom = 13f
+            val bell = Path().apply {
+                moveTo(cx - bellHalfWidthTop, bellTop)
+                quadTo(cx - bellHalfWidthBottom, bellBottom - 12f, cx - bellHalfWidthBottom, bellBottom)
+                lineTo(cx + bellHalfWidthBottom, bellBottom)
+                quadTo(cx + bellHalfWidthBottom, bellBottom - 12f, cx + bellHalfWidthTop, bellTop)
+                close()
+            }
+            canvas.drawPath(bell, bellPaint)
+            canvas.drawRect(cx - bellHalfWidthBottom - 2f, bellBottom, cx + bellHalfWidthBottom + 2f, bellBottom + 4f, bellPaint)
+            canvas.drawCircle(cx, bellBottom + 10f, 3f, bellPaint) // clapper
+            canvas.drawCircle(cx, bellTop - 2f, 2f, bellPaint)     // hanger knob
+
             val color = if (rising) Color.parseColor("#00e5ff") else Color.parseColor("#FF7700")
             val arrowPaint = Paint(Paint.ANTI_ALIAS_FLAG).apply {
                 style = Paint.Style.FILL
                 this.color = color
             }
-            val cx = bw / 2f
             val headHalfWidth = 14f
             val stemHalfWidth = 6f
             if (rising) {
-                val apexY = 22f; val baseY = 66f; val stemBottomY = 106f
+                val apexY = 58f; val baseY = 94f; val stemBottomY = 124f
                 val head = Path().apply {
                     moveTo(cx, apexY)
                     lineTo(cx - headHalfWidth, baseY)
@@ -68,7 +94,7 @@ class AlertComplicationService : SuspendingComplicationDataSourceService() {
                 canvas.drawPath(head, arrowPaint)
                 canvas.drawRect(cx - stemHalfWidth, baseY, cx + stemHalfWidth, stemBottomY, arrowPaint)
             } else {
-                val stemTopY = 23f; val baseY = 63f; val apexY = 107f
+                val stemTopY = 58f; val baseY = 88f; val apexY = 124f
                 canvas.drawRect(cx - stemHalfWidth, stemTopY, cx + stemHalfWidth, baseY, arrowPaint)
                 val head = Path().apply {
                     moveTo(cx, apexY)
