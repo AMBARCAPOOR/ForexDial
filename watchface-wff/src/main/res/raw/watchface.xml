@@ -1,6 +1,22 @@
 <WatchFace width="450" height="450" clipShape="CIRCLE">
 <Metadata key="CLOCK_TYPE" value="DIGITAL"/>
 <Metadata key="PREVIEW_TIME" value="10:08:32"/>
+<!-- SPIKE FINDINGS 2026-08-05, kept as a note for B.3: WFF DOES support a
+     true per-second flash via the proven Condition/Compare/Expression
+     pattern (same one driving the battery's colour) - confirmed on-device
+     with a magenta test rectangle alternating exactly on odd/even seconds.
+     Two things that weren't obvious going in: (1) the correct live-updating
+     variable is [SECOND], NOT [SECOND_Z] (that name produced a permanently
+     "off" result with no error - a silent-failure class like the earlier
+     PartDraw+Condition nesting bug); (2) "%" modulo IS valid in WFF
+     expressions, giving a real ~1Hz cadence, not just a slow half-minute
+     pulse. What's UNCONFIRMED: whether Condition can wrap PartImage/a
+     Complication directly - a first attempt at that (wrapping the ALERT
+     slot's PartImage) never showed the icon at any sampled second, on or
+     off. The robust path that avoids that open question entirely: layer a
+     background-coloured Rectangle over the complication, toggled by this
+     same proven Condition+PartDraw pattern, to mask/reveal it - drawn AFTER
+     the target ComplicationSlot in document order so it's on top. -->
 <Scene backgroundColor="#ff000000">
 <ComplicationSlot slotId="1" name="TOPROW" displayName="DXY/Yield/BTC" isCustomizable="FALSE" supportedTypes="SMALL_IMAGE EMPTY" x="9" y="35" width="432" height="60" alpha="255">
 <DefaultProviderPolicy primaryProvider="com.reddoor3.forexdial/com.reddoor3.forexdial.wear.complication.TopRowComplicationService" primaryProviderType="SMALL_IMAGE" defaultSystemProvider="EMPTY" defaultSystemProviderType="EMPTY"/>
