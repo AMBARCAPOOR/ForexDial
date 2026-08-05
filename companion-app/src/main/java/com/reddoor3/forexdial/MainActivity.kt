@@ -10,6 +10,7 @@ import androidx.work.NetworkType
 import androidx.work.OneTimeWorkRequestBuilder
 import androidx.work.OutOfQuotaPolicy
 import androidx.work.WorkManager
+import com.reddoor3.forexdial.api.ApiKeys
 import com.reddoor3.forexdial.work.ForexSyncWorker
 import com.reddoor3.forexdial.work.YieldSpreadWorker
 import java.text.SimpleDateFormat
@@ -124,6 +125,10 @@ class MainActivity : AppCompatActivity() {
         val btc    = prefs.getFloat("cached_btc", 0f)
 
         statusText.text = buildString {
+            // Setup problems come first - if there's no key, everything below
+            // is a symptom of that rather than an independent failure.
+            val hint = ApiKeys.setupHint()
+            if (hint.isNotEmpty()) append("$hint\n\n")
             append("Last sync: ${if (lastSync == 0L) "Never" else fmt.format(Date(lastSync))}\n")
             if (started > lastSync && started > 0L) append("Worker started: ${fmt.format(Date(started))}\n")
             if (syncStatus.isNotEmpty()) append("Status: $syncStatus")

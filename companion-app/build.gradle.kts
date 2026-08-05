@@ -26,6 +26,14 @@ android {
         versionName = "1.0"
         buildConfigField("String", "TWELVE_DATA_API_KEY",
             "\"${localProps.getProperty("twelveDataApiKey", "")}\"")
+        // Moved out of Constants.kt 2026-08-05. It had been hardcoded in
+        // source and so is in git history - treat the old value as burned
+        // and rotate it. Both keys now default to "" when local.properties
+        // is absent, which is what makes a source-only release safe to
+        // publish: a fresh clone builds with NO key baked in, so whoever
+        // builds it must supply their own.
+        buildConfigField("String", "FINNHUB_API_KEY",
+            "\"${localProps.getProperty("finnhubApiKey", "")}\"")
     }
 
     buildFeatures {

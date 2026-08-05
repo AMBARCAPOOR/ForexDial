@@ -18,11 +18,12 @@ class BootReceiver : BroadcastReceiver() {
         // A boot-time reboot kills any pending self-chained request, so this
         // one-time enqueue is what restarts the 3-minute chain after reboot.
         wm.enqueue(OneTimeWorkRequestBuilder<ForexSyncWorker>().setConstraints(net).build())
-        wm.enqueueUniquePeriodicWork(
-            "yield_sync", ExistingPeriodicWorkPolicy.KEEP,
-            PeriodicWorkRequestBuilder<YieldSpreadWorker>(15, TimeUnit.MINUTES)
-                .setConstraints(net).build()
-        )
+        // Yield is self-chaining to 02:00/14:00 Pacific as of 2026-08-05, and
+        // a reboot kills the pending chained request - so this one-time
+        // enqueue restarts it. It runs once now and then re-arms to the next
+        // clock slot, same as the forex chain above.
+        wm.cancelUniqueWork("yield_sync")   // clear the old 15-min periodic
+        wm.enqueue(OneTimeWorkRequestBuilder<YieldSpreadWorker>().setConstraints(net).build())
         wm.enqueueUniquePeriodicWork(
             "sun_sync", ExistingPeriodicWorkPolicy.KEEP,
             PeriodicWorkRequestBuilder<SunriseSunsetWorker>(1, TimeUnit.DAYS)

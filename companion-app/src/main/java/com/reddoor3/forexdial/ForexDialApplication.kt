@@ -35,15 +35,17 @@ class ForexDialApplication : Application() {
         // that chain. 3 min = 480 Twelve Data requests/day, under the 800/day
         // free cap.
 
-        // Yield spread — every 15 minutes
-        wm.enqueueUniquePeriodicWork(
-            "yield_sync",
-            ExistingPeriodicWorkPolicy.KEEP,
-            PeriodicWorkRequestBuilder<YieldSpreadWorker>(15, TimeUnit.MINUTES)
-                .setConstraints(netConstraint)
-                .setInitialDelay(1, TimeUnit.MINUTES)
-                .build()
-        )
+        // Yield spread: NOT periodic either, as of 2026-08-05. It now runs at
+        // 02:00 and 14:00 Pacific, and PeriodicWorkRequest fires on elapsed
+        // time rather than a wall-clock hour. YieldSpreadWorker re-enqueues
+        // itself to the next slot (see YieldSpreadWorker.scheduleNext); the
+        // one-time enqueue above starts that chain.
+        //
+        // Cancel the old periodic registration explicitly - existing installs
+        // still have "yield_sync" enqueued from a previous version, and
+        // nothing else would ever clear it, so it would keep polling every 15
+        // minutes forever alongside the new chain.
+        wm.cancelUniqueWork("yield_sync")
 
         // Sunrise/sunset — once daily (lat/lng is fixed so rarely changes)
         wm.enqueueUniquePeriodicWork(

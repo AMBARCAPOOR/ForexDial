@@ -46,7 +46,7 @@ object TwelveDataClient {
 
     // 1 credit.
     fun getEurUsdQuote(): EurUsdQuote {
-        val url = "https://api.twelvedata.com/quote?symbol=EUR/USD&apikey=${BuildConfig.TWELVE_DATA_API_KEY}"
+        val url = "https://api.twelvedata.com/quote?symbol=EUR/USD&apikey=${ApiKeys.require(ApiKeys.twelveData, "Twelve Data")}"
         val body = http.newCall(Request.Builder().url(url).build()).execute().use { resp ->
             if (!resp.isSuccessful) throw Exception("Twelve Data HTTP ${resp.code}")
             resp.body?.string() ?: throw Exception("Empty response")
@@ -59,7 +59,7 @@ object TwelveDataClient {
     // is deliberately excluded here; the fast poll already has a fresher one.
     fun getDxyBasket(): DxyBasket {
         val symbols = "USD/JPY,GBP/USD,USD/CAD,USD/SEK,USD/CHF"
-        val url = "https://api.twelvedata.com/quote?symbol=$symbols&apikey=${BuildConfig.TWELVE_DATA_API_KEY}"
+        val url = "https://api.twelvedata.com/quote?symbol=$symbols&apikey=${ApiKeys.require(ApiKeys.twelveData, "Twelve Data")}"
         val body = http.newCall(Request.Builder().url(url).build()).execute().use { resp ->
             if (!resp.isSuccessful) throw Exception("Twelve Data HTTP ${resp.code}")
             resp.body?.string() ?: throw Exception("Empty response")

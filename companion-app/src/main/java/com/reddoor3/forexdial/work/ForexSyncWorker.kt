@@ -9,6 +9,7 @@ import androidx.work.WorkerParameters
 import com.google.android.gms.wearable.PutDataMapRequest
 import com.google.android.gms.wearable.Wearable
 import com.reddoor3.forexdial.Constants
+import com.reddoor3.forexdial.api.ApiKeys
 import com.reddoor3.forexdial.api.FinnhubClient
 import com.reddoor3.forexdial.api.TwelveDataClient
 import kotlinx.coroutines.Dispatchers
@@ -65,6 +66,19 @@ class ForexSyncWorker(context: Context, params: WorkerParameters) : CoroutineWor
     private suspend fun runSync(): Result {
         val prefs = applicationContext.getSharedPreferences(Constants.PREFS_NAME, Context.MODE_PRIVATE)
         prefs.edit().putLong("sync_started_ts", System.currentTimeMillis()).apply()
+
+        // Fail fast and legibly when there's no key, rather than firing
+        // requests that are guaranteed to 401 and reporting it as a generic
+        // fetch failure. Returns success() deliberately - a missing key is a
+        // configuration state, not a transient error, so retrying costs
+        // battery and fixes nothing.
+        val missingKeys = ApiKeys.missing()
+        if (missingKeys.isNotEmpty()) {
+            prefs.edit()
+                .putString("sync_status", "No API key: ${missingKeys.joinToString(", ")}")
+                .apply()
+            return Result.success()
+        }
 
         val eurUsd = runCatching { TwelveDataClient.getEurUsdQuote() }.getOrNull()
         val btc    = runCatching { FinnhubClient.getBtc() }.getOrNull()

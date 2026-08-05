@@ -1,8 +1,10 @@
 package com.reddoor3.forexdial
 
 object Constants {
-    // Get your free key at https://finnhub.io — paste it here before first build
-    const val FINNHUB_API_KEY = "REDACTED_KEY_SEE_LOCAL_PROPERTIES"
+    // API keys are NOT here. They live in local.properties (gitignored) and
+    // reach the code via BuildConfig - see ApiKeys. A key hardcoded here is a
+    // key in git history forever, which is exactly what happened to the
+    // Finnhub one before 2026-08-05.
 
     // Finnhub symbols
     const val SYMBOL_EURUSD = "OANDA:EUR_USD"

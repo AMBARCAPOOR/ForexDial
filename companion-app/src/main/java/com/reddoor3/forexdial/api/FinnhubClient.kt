@@ -24,7 +24,8 @@ object FinnhubClient {
         .build()
 
     private fun quote(symbol: String): ForexQuote {
-        val url = "https://finnhub.io/api/v1/quote?symbol=${symbol}&token=${Constants.FINNHUB_API_KEY}"
+        val token = ApiKeys.require(ApiKeys.finnhub, "Finnhub")
+        val url = "https://finnhub.io/api/v1/quote?symbol=${symbol}&token=$token"
         val body = http.newCall(Request.Builder().url(url).build()).execute().use { resp ->
             if (!resp.isSuccessful) throw IOException("Finnhub HTTP ${resp.code} for $symbol")
             resp.body?.string() ?: throw IOException("Empty response for $symbol")
