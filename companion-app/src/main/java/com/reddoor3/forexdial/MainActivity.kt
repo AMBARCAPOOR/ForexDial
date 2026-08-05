@@ -19,6 +19,8 @@ class MainActivity : AppCompatActivity() {
 
     private lateinit var statusText: TextView
     private lateinit var valuesText: TextView
+    private lateinit var alertInput: EditText
+    private lateinit var alertStatus: TextView
     private val handler = Handler(Looper.getMainLooper())
     private val fmt = SimpleDateFormat("HH:mm:ss", Locale.getDefault())
 
@@ -61,6 +63,44 @@ class MainActivity : AppCompatActivity() {
             root.addView(this)
         }
 
+        // ---- Price alert (B.4) ----
+        TextView(this).apply {
+            text = "EUR/USD price alert"
+            textSize = 18f
+            setPadding(0, 48, 0, 4)
+            root.addView(this)
+        }
+
+        TextView(this).apply {
+            text = "Alerts on CROSSING this level in either direction. " +
+                   "Blank or 0 disables. Clear the alert by tapping the icon on the watch."
+            textSize = 12f
+            setPadding(0, 0, 0, 12)
+            root.addView(this)
+        }
+
+        alertInput = EditText(this).apply {
+            hint = "e.g. 1.1600"
+            inputType = android.text.InputType.TYPE_CLASS_NUMBER or
+                        android.text.InputType.TYPE_NUMBER_FLAG_DECIMAL
+            val saved = getSharedPreferences(Constants.PREFS_NAME, MODE_PRIVATE)
+                .getFloat(Constants.KEY_ALERT_LEVEL, 0f)
+            if (saved > 0f) setText("%.5f".format(saved))
+            root.addView(this)
+        }
+
+        alertStatus = TextView(this).apply {
+            textSize = 13f
+            setPadding(0, 8, 0, 8)
+            root.addView(this)
+        }
+
+        Button(this).apply {
+            text = "Save alert level"
+            setOnClickListener { saveAlertLevel() }
+            root.addView(this)
+        }
+
         setContentView(root)
     }
 
@@ -94,6 +134,41 @@ class MainActivity : AppCompatActivity() {
             append("DXY:     ${if (dxy    == 0f) "—" else "%.2f".format(dxy)}\n")
             append("BTC:     ${if (btc    == 0f) "—" else "$%.0f".format(btc)}")
         }
+
+        val level   = prefs.getFloat(Constants.KEY_ALERT_LEVEL, 0f)
+        val firedTs = prefs.getLong(Constants.KEY_ALERT_FIRED_TS, 0L)
+        val firedDir = prefs.getString(Constants.KEY_ALERT_FIRED_DIR, "") ?: ""
+        alertStatus.text = buildString {
+            append(if (level <= 0f) "Alert: off" else "Alert: armed at %.5f".format(level))
+            if (firedTs > 0L) {
+                append("\nLast fired: $firedDir at ${fmt.format(Date(firedTs))}")
+            }
+        }
+    }
+
+    private fun saveAlertLevel() {
+        val raw = alertInput.text.toString().trim()
+        val level = if (raw.isEmpty()) 0f else raw.toFloatOrNull()
+        if (level == null) {
+            Toast.makeText(this, "Not a valid number", Toast.LENGTH_SHORT).show()
+            return
+        }
+
+        val prefs = getSharedPreferences(Constants.PREFS_NAME, MODE_PRIVATE)
+        // Reset the crossing baseline whenever the level changes, so an
+        // already-past price doesn't instantly count as a fresh crossing the
+        // moment the new level is armed.
+        prefs.edit()
+            .putFloat(Constants.KEY_ALERT_LEVEL, level)
+            .putFloat(Constants.KEY_ALERT_LAST_PRICE, 0f)
+            .apply()
+
+        Toast.makeText(
+            this,
+            if (level <= 0f) "Alert disabled" else "Alert armed at %.5f".format(level),
+            Toast.LENGTH_SHORT
+        ).show()
+        refreshDisplay()
     }
 
     private fun triggerSync() {

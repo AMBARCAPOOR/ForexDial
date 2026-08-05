@@ -28,6 +28,11 @@ object DataLayerHelper {
                             prefs.putFloat(WatchConstants.KEY_EURUSD_PREV, map.getFloat(WatchConstants.KEY_EURUSD_PREV))
                             prefs.putFloat(WatchConstants.KEY_DXY, map.getFloat(WatchConstants.KEY_DXY))
                             prefs.putFloat(WatchConstants.KEY_BTC, map.getFloat(WatchConstants.KEY_BTC))
+                            prefs.putLong(WatchConstants.KEY_ALERT_TS, map.getLong(WatchConstants.KEY_ALERT_TS))
+                            map.getString(WatchConstants.KEY_ALERT_DIR)?.let {
+                                prefs.putString(WatchConstants.KEY_ALERT_DIR, it)
+                            }
+                            prefs.putFloat(WatchConstants.KEY_ALERT_LEVEL, map.getFloat(WatchConstants.KEY_ALERT_LEVEL))
                         }
                         WatchConstants.PATH_YIELD -> {
                             map.getString(WatchConstants.KEY_SENTIMENT)?.let {

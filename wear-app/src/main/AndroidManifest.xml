@@ -4,6 +4,7 @@
     <uses-feature android:name="android.hardware.type.watch"/>
 
     <uses-permission android:name="android.permission.WAKE_LOCK"/>
+    <uses-permission android:name="android.permission.VIBRATE"/>
 
     <application
         android:allowBackup="false"
@@ -24,6 +25,17 @@
             android:exported="false">
             <intent-filter>
                 <action android:name="com.reddoor3.forexdial.wear.ACTION_REFRESH"/>
+            </intent-filter>
+        </receiver>
+
+        <!-- Clears a fired price alert when the watch icon is tapped. Same
+             as the refresh receiver: only ever fired by this app's own
+             PendingIntent, so exported="false". -->
+        <receiver
+            android:name=".wear.AlertDismissReceiver"
+            android:exported="false">
+            <intent-filter>
+                <action android:name="com.reddoor3.forexdial.wear.ACTION_ALERT_DISMISS"/>
             </intent-filter>
         </receiver>
 

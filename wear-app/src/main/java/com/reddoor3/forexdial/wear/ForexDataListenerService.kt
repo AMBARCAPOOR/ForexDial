@@ -11,9 +11,11 @@ import com.reddoor3.forexdial.wear.complication.*
 class ForexDataListenerService : WearableListenerService() {
 
     override fun onDataChanged(events: DataEventBuffer) {
-        val prefs = getSharedPreferences(WatchConstants.PREFS, Context.MODE_PRIVATE).edit()
+        val store = getSharedPreferences(WatchConstants.PREFS, Context.MODE_PRIVATE)
+        val prefs = store.edit()
         var forexChanged = false
         var yieldChanged = false
+        var newAlertTs = 0L
 
         events.forEach { event ->
             val path = event.dataItem.uri.path ?: return@forEach
@@ -24,6 +26,22 @@ class ForexDataListenerService : WearableListenerService() {
                     prefs.putFloat(WatchConstants.KEY_EURUSD_PREV, map.getFloat(WatchConstants.KEY_EURUSD_PREV))
                     prefs.putFloat(WatchConstants.KEY_DXY,         map.getFloat(WatchConstants.KEY_DXY))
                     prefs.putFloat(WatchConstants.KEY_BTC,         map.getFloat(WatchConstants.KEY_BTC))
+
+                    // Buzz only for an alert we've never seen before - the
+                    // phone re-sends the same fired alert on every 3-minute
+                    // sync until a new crossing replaces it, so comparing
+                    // against the stored ts is what stops it vibrating over
+                    // and over for one crossing.
+                    val incomingAlertTs = map.getLong(WatchConstants.KEY_ALERT_TS)
+                    val knownAlertTs    = store.getLong(WatchConstants.KEY_ALERT_TS, 0L)
+                    if (incomingAlertTs != 0L && incomingAlertTs != knownAlertTs) {
+                        newAlertTs = incomingAlertTs
+                    }
+                    prefs.putLong(WatchConstants.KEY_ALERT_TS, incomingAlertTs)
+                    map.getString(WatchConstants.KEY_ALERT_DIR)?.let {
+                        prefs.putString(WatchConstants.KEY_ALERT_DIR, it)
+                    }
+                    prefs.putFloat(WatchConstants.KEY_ALERT_LEVEL, map.getFloat(WatchConstants.KEY_ALERT_LEVEL))
                     forexChanged = true
                 }
                 WatchConstants.PATH_YIELD -> {
@@ -39,13 +57,18 @@ class ForexDataListenerService : WearableListenerService() {
         }
         prefs.commit()
 
+        if (newAlertTs != 0L) {
+            vibrateForAlert()
+        }
+
         if (forexChanged) {
             listOf(
                 EurUsdComplicationService::class.java,
                 EurUsdPipComplicationService::class.java,
                 EurUsdPipsComplicationService::class.java,
                 DxyComplicationService::class.java,
-                BtcComplicationService::class.java
+                BtcComplicationService::class.java,
+                AlertComplicationService::class.java
             ).forEach { cls ->
                 runCatching {
                     ComplicationDataSourceUpdateRequester
@@ -65,6 +88,24 @@ class ForexDataListenerService : WearableListenerService() {
                         .requestUpdateAll()
                 }
             }
+        }
+    }
+
+    // Double buzz so it's distinguishable from an ordinary system
+    // notification. VIBRATE is a normal permission (granted at install, no
+    // runtime prompt), so this needs nothing from the user to work.
+    private fun vibrateForAlert() {
+        runCatching {
+            val vibrator =
+                if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.S) {
+                    (getSystemService(Context.VIBRATOR_MANAGER_SERVICE)
+                        as android.os.VibratorManager).defaultVibrator
+                } else {
+                    @Suppress("DEPRECATION")
+                    getSystemService(Context.VIBRATOR_SERVICE) as android.os.Vibrator
+                }
+            val pattern = longArrayOf(0, 250, 150, 250)
+            vibrator.vibrate(android.os.VibrationEffect.createWaveform(pattern, -1))
         }
     }
 }

@@ -1,11 +1,14 @@
 package com.reddoor3.forexdial.wear.complication
 
+import android.app.PendingIntent
 import android.content.Context
+import android.content.Intent
 import android.graphics.*
 import android.graphics.drawable.Icon
 import androidx.wear.watchface.complications.data.*
 import androidx.wear.watchface.complications.datasource.ComplicationRequest
 import androidx.wear.watchface.complications.datasource.SuspendingComplicationDataSourceService
+import com.reddoor3.forexdial.wear.AlertDismissReceiver
 import com.reddoor3.forexdial.wear.DataLayerHelper
 import com.reddoor3.forexdial.wear.WatchConstants
 
@@ -20,24 +23,38 @@ import com.reddoor3.forexdial.wear.WatchConstants
 // needs the same live price/prev data EurUsdComplicationService reads to
 // pick the direction.
 //
-// TEMPORARY: alertTriggered is hardcoded true so fit can be verified
-// on-device before B.4 wires in real price-threshold detection - this is
-// NOT yet gated by any actual alert condition.
+// Shown ONLY while a price alert is actually live: it appears when the phone
+// reports a threshold crossing and disappears when the user taps it (Ambar
+// 2026-08-05 - "it cant be there the whole time"). Between those, this
+// returns a fully transparent bitmap, so the WFF flash animation simply
+// blinks nothing.
 class AlertComplicationService : SuspendingComplicationDataSourceService() {
 
-    override fun getPreviewData(type: ComplicationType): ComplicationData? = build(rising = true)
+    override fun getPreviewData(type: ComplicationType): ComplicationData? =
+        build(rising = true, alertActive = true)
 
     override suspend fun onComplicationRequest(request: ComplicationRequest): ComplicationData? {
         val prefs = getSharedPreferences(WatchConstants.PREFS, Context.MODE_PRIVATE)
         DataLayerHelper.refreshFromDataLayer(this)
-        val price = prefs.getFloat(WatchConstants.KEY_EURUSD, 0f)
-        val prev  = prefs.getFloat(WatchConstants.KEY_EURUSD_PREV, 0f)
-        if (price == 0f) return null
-        return build(rising = price >= prev)
+
+        val alertTs   = prefs.getLong(WatchConstants.KEY_ALERT_TS, 0L)
+        val dismissed = prefs.getLong(WatchConstants.KEY_ALERT_DISMISSED_TS, 0L)
+        val alertActive = alertTs != 0L && alertTs != dismissed
+
+        // Direction comes from the crossing itself, not from the current
+        // intraday tick - the arrow should keep showing which way price
+        // crossed the threshold, even if it wobbles back afterwards.
+        val rising = when (prefs.getString(WatchConstants.KEY_ALERT_DIR, "") ?: "") {
+            "UP"   -> true
+            "DOWN" -> false
+            else   -> prefs.getFloat(WatchConstants.KEY_EURUSD, 0f) >=
+                      prefs.getFloat(WatchConstants.KEY_EURUSD_PREV, 0f)
+        }
+        return build(rising, alertActive)
     }
 
-    private fun build(rising: Boolean): ComplicationData {
-        val alertTriggered = true
+    private fun build(rising: Boolean, alertActive: Boolean): ComplicationData {
+        val alertTriggered = alertActive
         // Ambar 2026-08-05 (round 4): no more emoji at all - font glyphs
         // (plain triangles AND full emoji) kept producing surprises (wrong
         // apparent size, wrong-looking animal). Hand-drawn instead: a proper
@@ -106,12 +123,26 @@ class AlertComplicationService : SuspendingComplicationDataSourceService() {
             }
         }
 
-        return SmallImageComplicationData.Builder(
+        val builder = SmallImageComplicationData.Builder(
             smallImage = SmallImage.Builder(
                 image = Icon.createWithBitmap(bitmap),
                 type = SmallImageType.PHOTO
             ).build(),
-            contentDescription = PlainComplicationText.Builder(if (rising) "Bull alert" else "Bear alert").build()
-        ).build()
+            contentDescription = PlainComplicationText.Builder(
+                if (!alertActive) "No active alert"
+                else if (rising) "Price alert: crossed up" else "Price alert: crossed down"
+            ).build()
+        )
+        // Only tappable while there's actually something to clear.
+        if (alertActive) builder.setTapAction(dismissTapAction())
+        return builder.build()
     }
+
+    private fun dismissTapAction(): PendingIntent =
+        PendingIntent.getBroadcast(
+            this, 0,
+            Intent(this, AlertDismissReceiver::class.java)
+                .setAction(AlertDismissReceiver.ACTION_DISMISS),
+            PendingIntent.FLAG_UPDATE_CURRENT or PendingIntent.FLAG_IMMUTABLE
+        )
 }

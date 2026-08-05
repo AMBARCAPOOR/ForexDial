@@ -28,6 +28,16 @@ object Constants {
     const val WKEY_SUNRISE     = "sunrise"
     const val WKEY_SUNSET      = "sunset"
 
+    // Price alert (B.4). The alert is identified by the TIMESTAMP of the
+    // crossing that fired it, not a plain boolean: the watch dismisses
+    // locally by recording "I've already seen alert <ts>", so the phone can
+    // keep re-sending the same fired alert on every 3-minute sync without it
+    // popping back up after being cleared. A later crossing produces a new
+    // ts, which the watch then treats as a genuinely new alert.
+    const val WKEY_ALERT_TS    = "alert_ts"
+    const val WKEY_ALERT_DIR   = "alert_dir"    // "UP" | "DOWN"
+    const val WKEY_ALERT_LEVEL = "alert_level"
+
     // SharedPreferences keys
     const val PREFS_NAME      = "forex_cache"
     const val KEY_EURUSD      = "eurusd_price"
@@ -37,4 +47,10 @@ object Constants {
     const val KEY_YIELD_SENT  = "yield_sentiment"
     const val KEY_SUNRISE_EP  = "sunrise_epoch"
     const val KEY_SUNSET_EP   = "sunset_epoch"
+
+    // Price alert state, phone side
+    const val KEY_ALERT_LEVEL      = "alert_level"       // user-set threshold, 0 = disabled
+    const val KEY_ALERT_LAST_PRICE = "alert_last_price"  // previous observation, for crossing detection
+    const val KEY_ALERT_FIRED_TS   = "alert_fired_ts"
+    const val KEY_ALERT_FIRED_DIR  = "alert_fired_dir"
 }

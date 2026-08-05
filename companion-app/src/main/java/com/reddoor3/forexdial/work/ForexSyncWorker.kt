@@ -130,12 +130,26 @@ class ForexSyncWorker(context: Context, params: WorkerParameters) : CoroutineWor
 
         if (eurUsd == null && btc == null) return Result.retry()
 
+        // Only evaluate a crossing against a genuinely fresh quote. Using the
+        // preserved-cache fallback above would compare the threshold against
+        // a value we already compared last cycle, which could re-fire the
+        // same crossing (or invent one that never happened) purely because a
+        // fetch failed.
+        eurUsd?.price?.toFloat()?.let { checkAlertCrossing(prefs, it) }
+
+        val alertTs    = prefs.getLong(Constants.KEY_ALERT_FIRED_TS, 0L)
+        val alertDir   = prefs.getString(Constants.KEY_ALERT_FIRED_DIR, "") ?: ""
+        val alertLevel = prefs.getFloat(Constants.KEY_ALERT_LEVEL, 0f)
+
         return try {
             val request = PutDataMapRequest.create(Constants.PATH_FOREX).apply {
                 dataMap.putFloat(Constants.WKEY_EURUSD,      eurUsdOut)
                 dataMap.putFloat(Constants.WKEY_EURUSD_PREV, eurUsdPrevOut)
                 dataMap.putFloat(Constants.WKEY_DXY,         dxyOut)
                 dataMap.putFloat(Constants.WKEY_BTC,         btcOut)
+                dataMap.putLong(Constants.WKEY_ALERT_TS,     alertTs)
+                dataMap.putString(Constants.WKEY_ALERT_DIR,  alertDir)
+                dataMap.putFloat(Constants.WKEY_ALERT_LEVEL, alertLevel)
                 dataMap.putLong("ts", System.currentTimeMillis())
             }.asPutDataRequest().setUrgent()
 
@@ -149,5 +163,40 @@ class ForexSyncWorker(context: Context, params: WorkerParameters) : CoroutineWor
             prefs.edit().putString("sync_status", "Watch push failed: ${e.message}").apply()
             Result.retry()
         }
+    }
+
+    // Fires only on an actual CROSSING of the threshold, not merely on being
+    // the wrong side of it - otherwise the alert would re-fire every 3
+    // minutes for as long as price stayed past the level, which is exactly
+    // the "it's there the whole time" behaviour this is meant to avoid.
+    //
+    // Records the new price as the baseline every call, so a crossing is
+    // detected once, on the cycle it happens, and then not again until price
+    // comes back and crosses afresh.
+    private fun checkAlertCrossing(
+        prefs: android.content.SharedPreferences,
+        newPrice: Float
+    ) {
+        val level = prefs.getFloat(Constants.KEY_ALERT_LEVEL, 0f)
+        val prev  = prefs.getFloat(Constants.KEY_ALERT_LAST_PRICE, 0f)
+
+        // Always advance the baseline, even when no threshold is set - so
+        // enabling an alert later compares against a current price rather
+        // than a stale one from whenever the feature was last used.
+        prefs.edit().putFloat(Constants.KEY_ALERT_LAST_PRICE, newPrice).apply()
+
+        if (level <= 0f) return   // alert disabled
+        if (prev <= 0f) return    // no baseline yet - first observation only
+
+        val dir = when {
+            prev < level && newPrice >= level -> "UP"
+            prev > level && newPrice <= level -> "DOWN"
+            else -> return
+        }
+
+        prefs.edit()
+            .putLong(Constants.KEY_ALERT_FIRED_TS, System.currentTimeMillis())
+            .putString(Constants.KEY_ALERT_FIRED_DIR, dir)
+            .apply()
     }
 }
