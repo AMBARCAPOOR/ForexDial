@@ -65,10 +65,51 @@
 <ComplicationSlot slotId="3" name="ALERT" displayName="Bull/Bear Alert" isCustomizable="FALSE" supportedTypes="SMALL_IMAGE EMPTY" x="358" y="215" width="44" height="129" alpha="255">
 <DefaultProviderPolicy primaryProvider="com.reddoor3.forexdial/com.reddoor3.forexdial.wear.complication.AlertComplicationService" primaryProviderType="SMALL_IMAGE" defaultSystemProvider="EMPTY" defaultSystemProviderType="EMPTY"/>
 <BoundingBox x="0" y="0" width="44" height="129"/>
+<!-- B.3 FLASH, built 2026-08-05: the whole alert icon (bell + arrow, one
+     bitmap) blinks ~1Hz - visible on odd seconds, hidden on even. Uses the
+     Condition/Compare/Expression pattern proven by the spike, with the two
+     findings that spike produced: the live-updating variable is [SECOND]
+     (NOT [SECOND_Z], which silently never fires), and "%" modulo is valid
+     so the cadence can be per-second rather than a slow half-minute pulse.
+
+     NOTE on the spike's "PartImage may not be a valid Condition child"
+     worry: that conclusion was WRONG, and worth recording so nobody
+     re-derives it. That first attempt used [SECOND_Z] - the variable we
+     only later proved never fires - so it was failing on the variable
+     name, not the nesting. Re-tested here with [SECOND] and PartImage
+     nests inside Condition fine, which is why this is the direct approach
+     rather than the black-Rectangle mask workaround the spike proposed.
+
+     1Hz is the practical floor: SECOND is the finest-grained time variable
+     driving these expressions, and a faster strobe would need the face to
+     redraw far more often - a battery cost that isn't worth it for an
+     indicator that's already unmissable at this rate.
+
+     When B.4 lands, this needs no change: AlertComplicationService returns
+     an empty bitmap when no alert is active, so this just blinks nothing. -->
 <Complication type="SMALL_IMAGE">
+<Condition>
+<Expressions>
+<Expression name="alert_flash_on">[SECOND] % 2</Expression>
+</Expressions>
+<Compare expression="alert_flash_on">
 <PartImage x="0" y="0" width="44" height="129" alpha="255">
 <Image resource="[COMPLICATION.SMALL_IMAGE]"/>
 </PartImage>
+</Compare>
+<Default>
+<!-- AMBIENT: force the icon back to visible on the "off" half of the
+     blink. In ambient the face only redraws about once a minute, and
+     that tick lands on :00 - an even second, i.e. THIS branch - so
+     without this Variant an active alert would be permanently invisible
+     in ambient, exactly when you glance at a dimmed watch. Net effect:
+     flashes while interactive, steady-on while ambient. -->
+<PartImage x="0" y="0" width="44" height="129" alpha="0">
+<Variant mode="AMBIENT" target="alpha" value="255"/>
+<Image resource="[COMPLICATION.SMALL_IMAGE]"/>
+</PartImage>
+</Default>
+</Condition>
 </Complication>
 <Complication type="EMPTY"/>
 </ComplicationSlot>
