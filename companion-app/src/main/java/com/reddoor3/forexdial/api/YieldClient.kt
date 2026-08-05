@@ -5,7 +5,10 @@ import okhttp3.Request
 import java.io.IOException
 import java.util.concurrent.TimeUnit
 
-data class YieldResult(val spread: Double, val direction: String)
+// prevSpread is the spread on the previous COMMON trading day (see
+// getYieldSpread) - null when only one common day could be resolved, which
+// the watch renders as a neutral colour rather than guessing a direction.
+data class YieldResult(val spread: Double, val direction: String, val prevSpread: Double?)
 
 // EUR/USD 2-year yield spread.
 //
@@ -55,46 +58,71 @@ object YieldClient {
     // "." rows across all 13,090 observations. So the plain last-row read
     // the old code used would work today; this just doesn't depend on that
     // staying true, at the cost of a few lines.
-    private fun fredLatest(seriesId: String): Double {
+    private fun fredSeries(seriesId: String): Map<String, Double> {
         val csv = fetch(
             "https://fred.stlouisfed.org/graph/fredgraph.csv?id=$seriesId",
             "FRED $seriesId"
         )
-        return csv.trim().lines().asReversed()
-            .firstNotNullOfOrNull { line ->
-                if (line.isBlank() || line.startsWith("observation_date") || line.startsWith("DATE")) null
-                else line.split(",").getOrNull(1)?.trim()?.toDoubleOrNull()
+        // Only the tail is ever needed and the full series is ~13k rows, so
+        // parse from the end and stop early.
+        return csv.trim().lines().asReversed().asSequence()
+            .filter { it.isNotBlank() && !it.startsWith("observation_date") && !it.startsWith("DATE") }
+            .take(30)
+            .mapNotNull { line ->
+                val parts = line.split(",")
+                val date = parts.getOrNull(0)?.trim()
+                val value = parts.getOrNull(1)?.trim()?.toDoubleOrNull()
+                if (date != null && value != null) date to value else null
             }
-            ?: throw IOException("No parseable value in FRED $seriesId")
+            .toMap()
     }
 
     // ECB csvdata: a header row then one row per observation. Column 9
     // (0-indexed) is OBS_VALUE. Later columns do contain quoted commas
     // (TITLE_COMPL), but every column up to OBS_VALUE is a simple token, so
     // a plain split is safe this far in.
-    private fun ecbLatest(seriesKey: String): Double {
+    private fun ecbSeries(seriesKey: String, n: Int): Map<String, Double> {
         val csv = fetch(
             "https://data-api.ecb.europa.eu/service/data/YC/$seriesKey" +
-                "?lastNObservations=1&format=csvdata",
+                "?lastNObservations=$n&format=csvdata",
             "ECB $seriesKey"
         )
-        val row = csv.trim().lines().firstOrNull { it.startsWith("YC.") }
-            ?: throw IOException("No data row in ECB response for $seriesKey")
-        return row.split(",").getOrNull(9)?.trim()?.toDoubleOrNull()
-            ?: throw IOException("Cannot parse ECB value from: ${row.take(120)}")
+        return csv.trim().lines().asSequence()
+            .filter { it.startsWith("YC.") }
+            .mapNotNull { row ->
+                val cols = row.split(",")
+                val date = cols.getOrNull(8)?.trim()
+                val value = cols.getOrNull(9)?.trim()?.toDoubleOrNull()
+                if (date != null && value != null) date to value else null
+            }
+            .toMap()
     }
 
-    // Raw EUR-US 2-year spread plus a LONG/SHORT/NEUT direction.
-    // EUR yields above US by >0.10 -> LONG EUR/USD conviction, and vice versa.
+    // EUR-US 2-year spread for the latest day BOTH legs cover, plus the same
+    // spread on the previous such day, plus a LONG/SHORT/NEUT direction.
+    //
+    // Deliberately intersects the two legs' dates rather than just taking
+    // each leg's newest value. The two sources run on different lags (on
+    // 2026-08-05 the ECB had Aug 4 while FRED DGS2 had only Aug 3), so
+    // pairing "newest with newest" silently computes a spread across two
+    // different days - and a day-over-day CHANGE built that way could be
+    // pure lag artefact rather than a real move. Matching on common dates
+    // costs one slightly older reading and makes the change trustworthy.
     fun getYieldSpread(): YieldResult {
-        val eur    = ecbLatest(ECB_EUR_2Y)
-        val us     = fredLatest(FRED_US_2Y)
-        val spread = eur - us
-        val dir    = when {
+        val eur = ecbSeries(ECB_EUR_2Y, 30)
+        val us  = fredSeries(FRED_US_2Y)
+
+        val common = eur.keys.intersect(us.keys).sortedDescending()
+        if (common.isEmpty()) throw IOException("No overlapping dates between ECB and FRED series")
+
+        val spread = eur.getValue(common[0]) - us.getValue(common[0])
+        val prev   = common.getOrNull(1)?.let { eur.getValue(it) - us.getValue(it) }
+
+        val dir = when {
             spread >  0.10 -> "LONG"
             spread < -0.10 -> "SHORT"
             else           -> "NEUT"
         }
-        return YieldResult(spread, dir)
+        return YieldResult(spread, dir, prev)
     }
 }

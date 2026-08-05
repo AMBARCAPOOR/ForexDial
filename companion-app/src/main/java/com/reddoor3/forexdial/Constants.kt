@@ -25,6 +25,9 @@ object Constants {
     const val WKEY_BTC         = "btc"
     const val WKEY_SENTIMENT     = "sentiment"
     const val WKEY_YIELD_SPREAD  = "yield_spread"
+    // Previous common trading day's spread, so the watch can colour the
+    // number by day-over-day change. Float.MAX_VALUE means "unknown".
+    const val WKEY_YIELD_PREV    = "yield_prev"
     const val WKEY_SUNRISE     = "sunrise"
     const val WKEY_SUNSET      = "sunset"
 

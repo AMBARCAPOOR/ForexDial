@@ -13,6 +13,8 @@ object WatchConstants {
     const val KEY_BTC         = "btc"
     const val KEY_SENTIMENT     = "sentiment"
     const val KEY_YIELD_SPREAD  = "yield_spread"
+    // Previous common trading day's spread; Float.MAX_VALUE = unknown.
+    const val KEY_YIELD_PREV    = "yield_prev"
     const val KEY_SUNRISE     = "sunrise"
     const val KEY_SUNSET      = "sunset"
 

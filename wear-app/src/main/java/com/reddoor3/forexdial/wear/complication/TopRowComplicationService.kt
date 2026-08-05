@@ -24,31 +24,54 @@ import com.reddoor3.forexdial.wear.WatchConstants
 class TopRowComplicationService : SuspendingComplicationDataSourceService() {
 
     override fun getPreviewData(type: ComplicationType): ComplicationData? =
-        build(101.14f, "SHORT", 67420f)
+        build(101.14f, -1.59f, -1.62f, 67420f)
 
     override suspend fun onComplicationRequest(request: ComplicationRequest): ComplicationData? {
         val prefs = getSharedPreferences(WatchConstants.PREFS, Context.MODE_PRIVATE)
         // ALWAYS refresh - see EurUsdComplicationService for why gating on
         // ==0f was the actual bug (stale-but-present values never refreshed).
         DataLayerHelper.refreshFromDataLayer(this)
-        val dxy  = prefs.getFloat(WatchConstants.KEY_DXY, 0f)
-        val sent = prefs.getString(WatchConstants.KEY_SENTIMENT, "NEUT") ?: "NEUT"
-        val btc  = prefs.getFloat(WatchConstants.KEY_BTC, 0f)
+        val dxy   = prefs.getFloat(WatchConstants.KEY_DXY, 0f)
+        val yield = prefs.getFloat(WatchConstants.KEY_YIELD_SPREAD, Float.MAX_VALUE)
+        val yPrev = prefs.getFloat(WatchConstants.KEY_YIELD_PREV, Float.MAX_VALUE)
+        val btc   = prefs.getFloat(WatchConstants.KEY_BTC, 0f)
         if (dxy == 0f && btc == 0f) return null
-        return build(dxy, sent, btc)
+        return build(dxy, yield, yPrev, btc)
     }
 
-    private fun build(dxy: Float, sentiment: String, btc: Float): ComplicationData {
+    private fun build(dxy: Float, yield: Float, yieldPrev: Float, btc: Float): ComplicationData {
         val bw = 432; val bh = 60
         val bitmap = Bitmap.createBitmap(bw, bh, Bitmap.Config.ARGB_8888)
         val canvas = Canvas(bitmap)
         val tf      = Typeface.create("sans-serif-condensed", Typeface.BOLD)
         val tfLight = Typeface.create("sans-serif-condensed", Typeface.NORMAL)
 
-        val sentColor = when (sentiment) {
-            "LONG"  -> Color.parseColor("#00e5ff")
-            "SHORT" -> Color.parseColor("#FF7700")
-            else    -> Color.LTGRAY
+        // Ambar 2026-08-05: back to the numeric spread, but coloured by
+        // DAY-OVER-DAY CHANGE rather than by level.
+        //
+        // Spread is EUR 2Y minus US 2Y, so it ROSE = EUR's rate advantage
+        // improved = EUR-positive = cyan; FELL = USD-positive = orange.
+        // That keeps cyan meaning the same EUR/USD-up thing it means
+        // everywhere else on this face. Avoiding "widened/narrowed" here on
+        // purpose - the spread is negative, so those words are ambiguous
+        // (more negative is a WIDER US premium but a LOWER spread value).
+        //
+        // Note this is a different meaning from the LONG/SHORT word it
+        // replaces: that described where the spread SITS, this describes
+        // which way it MOVED. Grey when there's no previous day to compare
+        // against, rather than implying a direction we don't know.
+        //
+        // A number is honest here now in a way it wasn't before: the old
+        // source was monthly (and was running 2 months stale), so a precise
+        // figure implied freshness it didn't have and a daily change was
+        // not even computable. Both legs are daily as of 2026-08-05.
+        val haveYield = yield != Float.MAX_VALUE
+        val havePrev  = yieldPrev != Float.MAX_VALUE
+        val sentColor = when {
+            !haveYield || !havePrev  -> Color.LTGRAY
+            yield > yieldPrev        -> Color.parseColor("#00e5ff")
+            yield < yieldPrev        -> Color.parseColor("#FF7700")
+            else                     -> Color.LTGRAY   // genuinely unchanged
         }
 
         // Sizes set by Ambar 2026-07-29: labels +50% (14->21), values +20% (22->26).
@@ -66,15 +89,12 @@ class TopRowComplicationService : SuspendingComplicationDataSourceService() {
         // (unchanged). "doesn't have to be symmetrical" per Ambar.
         val xDxy = bw * 0.27f; val xYield = bw * 0.5f; var xBtc = bw * 0.75f
 
-        // Ambar 2026-07-30: always show the direction word (LONG/SHORT/NEUT),
-        // not the raw spread number. Doubly right given the underlying FRED
-        // series is monthly (confirmed 2026-07-29) - a 4-decimal number
-        // implies a precision/freshness the data doesn't actually have; the
-        // word states the only thing that's really known (direction) without
-        // that false impression. BTC's gap-based positioning (below) already
-        // measures this string's real width each render, so it adapts
-        // automatically now that it's shorter than the old numeric format.
-        val yStr = sentiment
+        // 2dp: the spread runs around -1.59, and 0.01 is one basis point -
+        // fine enough that a normal daily move (a few bp) actually shows in
+        // the digits, without the false sub-basis-point precision the old
+        // 4dp format implied. Superseded the LONG/SHORT word that stood here
+        // between 2026-07-30 and 2026-08-05.
+        val yStr = if (haveYield) "%.2f".format(yield) else "—"
         val btcStr = if (btc > 0f) "%.0f".format(btc) else null
 
         // Ambar 2026-07-30: BTC moved left by 25% of the gap between yield's

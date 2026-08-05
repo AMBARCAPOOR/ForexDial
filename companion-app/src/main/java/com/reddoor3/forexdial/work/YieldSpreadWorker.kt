@@ -20,6 +20,8 @@ class YieldSpreadWorker(context: Context, params: WorkerParameters) : CoroutineW
             val request = PutDataMapRequest.create(Constants.PATH_YIELD).apply {
                 dataMap.putString(Constants.WKEY_SENTIMENT,    result.direction)
                 dataMap.putFloat(Constants.WKEY_YIELD_SPREAD,  result.spread.toFloat())
+                dataMap.putFloat(Constants.WKEY_YIELD_PREV,
+                    result.prevSpread?.toFloat() ?: Float.MAX_VALUE)
             }.asPutDataRequest().setUrgent()
 
             Wearable.getDataClient(applicationContext).putDataItem(request).await()

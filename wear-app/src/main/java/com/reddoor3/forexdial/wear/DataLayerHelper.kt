@@ -40,6 +40,8 @@ object DataLayerHelper {
                             }
                             prefs.putFloat(WatchConstants.KEY_YIELD_SPREAD,
                                 map.getFloat(WatchConstants.KEY_YIELD_SPREAD, Float.MAX_VALUE))
+                            prefs.putFloat(WatchConstants.KEY_YIELD_PREV,
+                                map.getFloat(WatchConstants.KEY_YIELD_PREV, Float.MAX_VALUE))
                         }
                     }
                 }
