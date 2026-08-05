@@ -13,4 +13,5 @@
     <string name="comp_yield_dir_label">Yield Direction</string>
     <string name="comp_top_row_label">DXY / Yield / BTC Row</string>
     <string name="comp_session_row_label">Session Status Row</string>
+    <string name="comp_alert_label">Bull/Bear Alert</string>
 </resources>
