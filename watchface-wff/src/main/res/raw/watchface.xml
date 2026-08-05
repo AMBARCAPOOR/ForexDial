@@ -41,11 +41,16 @@
      EUR/USD price data, which only our own complications have access to -
      WFF's built-in [XXX] expressions only cover system values like
      [BATTERY_PERCENT], not app data. -->
-<ComplicationSlot slotId="3" name="ALERT" displayName="Bull/Bear Alert" isCustomizable="FALSE" supportedTypes="SMALL_IMAGE EMPTY" x="370" y="215" width="32" height="129" alpha="255">
+<!-- Widened 2026-08-05 (32->44) for 50% bigger glyphs per Ambar - right
+     edge anchored at 402 (unchanged, already bezel-verified safe), grew
+     leftward to 358 since that direction has headroom; widening rightward
+     is bezel-capped at ~415 (checked against the slot's bottom-right
+     corner, the closest point to the bezel in this band). -->
+<ComplicationSlot slotId="3" name="ALERT" displayName="Bull/Bear Alert" isCustomizable="FALSE" supportedTypes="SMALL_IMAGE EMPTY" x="358" y="215" width="44" height="129" alpha="255">
 <DefaultProviderPolicy primaryProvider="com.reddoor3.forexdial/com.reddoor3.forexdial.wear.complication.AlertComplicationService" primaryProviderType="SMALL_IMAGE" defaultSystemProvider="EMPTY" defaultSystemProviderType="EMPTY"/>
-<BoundingBox x="0" y="0" width="32" height="129"/>
+<BoundingBox x="0" y="0" width="44" height="129"/>
 <Complication type="SMALL_IMAGE">
-<PartImage x="0" y="0" width="32" height="129" alpha="255">
+<PartImage x="0" y="0" width="44" height="129" alpha="255">
 <Image resource="[COMPLICATION.SMALL_IMAGE]"/>
 </PartImage>
 </Complication>
