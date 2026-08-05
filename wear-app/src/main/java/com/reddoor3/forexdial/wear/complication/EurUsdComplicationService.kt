@@ -81,13 +81,19 @@ class EurUsdComplicationService : SuspendingComplicationDataSourceService() {
         // local x=70. The right side stops well short of the bitmap's own
         // edge (432) to reserve space for the alert symbol (bull/bear+fire,
         // still to be built and verified on-device - not drawn yet).
+        // Ambar 2026-08-05: both boxes were fixed pixel rectangles that never
+        // tracked the text they were meant to frame - startX (rate) and the
+        // pips bar's centred x both shift with every live value's width, so
+        // a static box clipped the outer digits whenever the live text ran
+        // wider than the guessed rectangle. Fixed below by measuring each
+        // block's real rendered pixel bounds (getTextBounds, not
+        // measureText - advance width can undershoot true bold-glyph edges)
+        // and deriving each box FROM that measurement instead of a guess.
         val boxPaint = Paint(Paint.ANTI_ALIAS_FLAG).apply {
             style = Paint.Style.STROKE
             strokeWidth = 3f
             color = pipColor
         }
-        canvas.drawRect(70f, 8f, 362f, 113f, boxPaint)   // box 1: the rate
-        canvas.drawRect(130f, 120f, 302f, 148f, boxPaint) // box 2: the pips line, smaller
 
         val mainPaint = Paint(Paint.ANTI_ALIAS_FLAG).apply {
             typeface = tf
@@ -121,6 +127,13 @@ class EurUsdComplicationService : SuspendingComplicationDataSourceService() {
         val pipMid  = (pipBounds.top + pipBounds.bottom) / 2f
         val pipBase = base + (mainMid - pipMid)
 
+        // Box 1: true left/right pixel edges of the combined main+pip block,
+        // padded 5px each way per Ambar's instruction (horizontal-only fix -
+        // "cutting into the edge figures"; vertical stays the original 8/113).
+        val rateLeft  = startX + mainBounds.left
+        val rateRight = startX + mainW + pipBounds.right
+        canvas.drawRect(rateLeft - 5f, 8f, rateRight + 5f, 113f, boxPaint)
+
         canvas.drawText(main, startX, base, mainPaint)
         canvas.drawText(pip, startX + mainW, pipBase, pipPaint)
 
@@ -140,7 +153,34 @@ class EurUsdComplicationService : SuspendingComplicationDataSourceService() {
                 color = pipColor
                 textAlign = Paint.Align.CENTER
             }
-            canvas.drawText(bar, bw / 2f, 136f, barPaint)
+            // Ambar 2026-08-05: line moved down 5px (was 136f) per instruction.
+            val barY = 141f
+
+            // Box 2: was a fixed guess (130,120)-(302,148) that didn't track
+            // the bar's actual centred width, so it clipped whenever the
+            // live pips/percent text ran wider than that guess. Now measured
+            // from the real string each render and padded 5px on ALL four
+            // sides ("bigger than that line by 5px each side").
+            //
+            // getTextBounds() IGNORES Paint.textAlign - it always measures as
+            // if the text were drawn LEFT-aligned starting at x=0, regardless
+            // of the CENTER alignment barPaint actually draws with. Using
+            // bw/2f directly as that reference (as if it were the left edge)
+            // put the box roughly one half-text-width too far right - caught
+            // on-device as a box skewed off to the right of the real text.
+            // Fix: derive the equivalent left-aligned draw x from the
+            // measured width first, then add the bounds to THAT.
+            val barW = barPaint.measureText(bar)
+            val barDrawX = bw / 2f - barW / 2f
+            val barBounds = Rect()
+            barPaint.getTextBounds(bar, 0, bar.length, barBounds)
+            val barLeft   = barDrawX + barBounds.left
+            val barRight  = barDrawX + barBounds.right
+            val barTop    = barY + barBounds.top
+            val barBottom = barY + barBounds.bottom
+            canvas.drawRect(barLeft - 5f, barTop - 5f, barRight + 5f, barBottom + 5f, boxPaint)
+
+            canvas.drawText(bar, bw / 2f, barY, barPaint)
         }
 
         return SmallImageComplicationData.Builder(
