@@ -89,12 +89,12 @@ class TopRowComplicationService : SuspendingComplicationDataSourceService() {
         // (unchanged). "doesn't have to be symmetrical" per Ambar.
         val xDxy = bw * 0.27f; val xYield = bw * 0.5f; var xBtc = bw * 0.75f
 
-        // 2dp: the spread runs around -1.59, and 0.01 is one basis point -
-        // fine enough that a normal daily move (a few bp) actually shows in
-        // the digits, without the false sub-basis-point precision the old
-        // 4dp format implied. Superseded the LONG/SHORT word that stood here
-        // between 2026-07-30 and 2026-08-05.
-        val yStr = if (haveYield) "%.2f".format(yield) else "—"
+        // 4dp per Ambar 2026-08-05. Unlike the earlier 4dp format (which sat
+        // on a monthly, 2-month-stale series and so implied precision the
+        // data didn't have), the underlying legs are now daily, so the extra
+        // digits are real - they resolve sub-basis-point daily moves that
+        // 2dp rounded away entirely.
+        val yStr = if (haveYield) "%.4f".format(yield) else "—"
         val btcStr = if (btc > 0f) "%.0f".format(btc) else null
 
         // Ambar 2026-07-30: BTC moved left by 25% of the gap between yield's
