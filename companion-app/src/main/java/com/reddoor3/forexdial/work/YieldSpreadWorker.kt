@@ -6,7 +6,7 @@ import androidx.work.WorkerParameters
 import com.google.android.gms.wearable.PutDataMapRequest
 import com.google.android.gms.wearable.Wearable
 import com.reddoor3.forexdial.Constants
-import com.reddoor3.forexdial.api.FredClient
+import com.reddoor3.forexdial.api.YieldClient
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.tasks.await
 import kotlinx.coroutines.withContext
@@ -15,7 +15,7 @@ class YieldSpreadWorker(context: Context, params: WorkerParameters) : CoroutineW
 
     override suspend fun doWork(): Result = withContext(Dispatchers.IO) {
         try {
-            val result = FredClient.getYieldSpread()
+            val result = YieldClient.getYieldSpread()
 
             val request = PutDataMapRequest.create(Constants.PATH_YIELD).apply {
                 dataMap.putString(Constants.WKEY_SENTIMENT,    result.direction)
