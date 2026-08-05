@@ -92,6 +92,7 @@ class EurUsdComplicationService : SuspendingComplicationDataSourceService() {
         val boxPaint = Paint(Paint.ANTI_ALIAS_FLAG).apply {
             style = Paint.Style.STROKE
             strokeWidth = 3f
+            strokeCap = Paint.Cap.SQUARE
             color = pipColor
         }
 
@@ -127,12 +128,29 @@ class EurUsdComplicationService : SuspendingComplicationDataSourceService() {
         val pipMid  = (pipBounds.top + pipBounds.bottom) / 2f
         val pipBase = base + (mainMid - pipMid)
 
-        // Box 1: true left/right pixel edges of the combined main+pip block,
-        // padded 5px each way per Ambar's instruction (horizontal-only fix -
-        // "cutting into the edge figures"; vertical stays the original 8/113).
-        val rateLeft  = startX + mainBounds.left
-        val rateRight = startX + mainW + pipBounds.right
-        canvas.drawRect(rateLeft - 5f, 8f, rateRight + 5f, 113f, boxPaint)
+        // Box 1: true left/right pixel edges of the combined main+pip block.
+        // Ambar 2026-08-05 (round 2): widened another 25px each side on top
+        // of the previous 5px pad (30px total from the true text edges), and
+        // the two VERTICAL edges only made 400% thicker (3f -> 15f) for a
+        // bracket-style frame - top/bottom stay the original thin 3f line.
+        // drawRect can't vary stroke width per side, so this is four
+        // drawLine calls instead of one drawRect; Cap.SQUARE on both paints
+        // extends each line half its own width past its endpoints, which
+        // closes the corners cleanly despite the thickness mismatch.
+        val rateLeft   = startX + mainBounds.left - 30f
+        val rateRight  = startX + mainW + pipBounds.right + 30f
+        val rateTop    = 8f
+        val rateBottom = 113f
+        val boxEdgePaint = Paint(Paint.ANTI_ALIAS_FLAG).apply {
+            style = Paint.Style.STROKE
+            strokeWidth = 15f
+            strokeCap = Paint.Cap.SQUARE
+            color = pipColor
+        }
+        canvas.drawLine(rateLeft, rateTop, rateRight, rateTop, boxPaint)        // top, thin
+        canvas.drawLine(rateLeft, rateBottom, rateRight, rateBottom, boxPaint)  // bottom, thin
+        canvas.drawLine(rateLeft, rateTop, rateLeft, rateBottom, boxEdgePaint)    // left edge, thick
+        canvas.drawLine(rateRight, rateTop, rateRight, rateBottom, boxEdgePaint)  // right edge, thick
 
         canvas.drawText(main, startX, base, mainPaint)
         canvas.drawText(pip, startX + mainW, pipBase, pipPaint)
@@ -176,9 +194,19 @@ class EurUsdComplicationService : SuspendingComplicationDataSourceService() {
             barPaint.getTextBounds(bar, 0, bar.length, barBounds)
             val barLeft   = barDrawX + barBounds.left
             val barRight  = barDrawX + barBounds.right
-            val barTop    = barY + barBounds.top
-            val barBottom = barY + barBounds.bottom
-            canvas.drawRect(barLeft - 5f, barTop - 5f, barRight + 5f, barBottom + 5f, boxPaint)
+            val barTop       = barY + barBounds.top
+            val barBottomRaw = barY + barBounds.bottom
+            // Ambar 2026-08-05: bottom was getting cut off. Not the
+            // DigitalClock - that's a separate WFF element starting at
+            // absolute screen y=234, a clean 4px below this complication's
+            // own y=80+150=230 bottom edge, so it can never overlap this
+            // bitmap. The real cause: this bitmap is only bh=150px tall, and
+            // barY(141) + the text's true descender bounds + the 5px pad
+            // pushed the box's bottom coordinate PAST 150 - the BITMAP's own
+            // edge was silently clipping it. Clamped so the box can never
+            // exceed the bitmap regardless of exact glyph metrics.
+            val barBottom = (barBottomRaw + 5f).coerceAtMost(bh - 2f)
+            canvas.drawRect(barLeft - 5f, barTop - 5f, barRight + 5f, barBottom, boxPaint)
 
             canvas.drawText(bar, bw / 2f, barY, barPaint)
         }

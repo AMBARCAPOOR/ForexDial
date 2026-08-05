@@ -70,8 +70,9 @@
      no crash), which cost a cycle earlier. Condition and PartText must be
      siblings of PartDraw, both living directly under this Group.
 
-     Coordinate frame for every PartDraw below: box is x=33,y=175,w=32,h=129 -
-     tall enough to contain wick(14) + body(101) + wick(14) with NO negative
+     Coordinate frame for every PartDraw below: box is x=48,y=200,w=32,h=129
+     (moved 2026-08-05, see below) - tall enough to contain wick(14) +
+     body(101) + wick(14) with NO negative
      local coordinates, since it's unconfirmed whether PartDraw clips children
      to its own declared box. Local y=14 is the body top, y=115 is the body
      bottom, throughout.
@@ -87,16 +88,29 @@
      into the amber/red range. Fixed with real comparison operators
      (verified against Android's WFF docs: &gt;/&gt;=/&lt;/&lt;= return actual
      booleans, unlike arithmetic subtraction) - "[BATTERY_PERCENT] &gt; 50" /
-     "&gt; 20". NOT YET VISUALLY VERIFIED at a real low battery level or via
-     `adb shell dumpsys battery set level <N>` - do that before trusting this
-     is fully fixed, not just theoretically correct. -->
+     "&gt; 20". Verified on-device across all three tiers.
+
+     MOVED 2026-08-05 (found by Ambar - "battery candle is now being cut"):
+     the EUR/USD rate box (drawn in EurUsdComplicationService) was widened
+     25px each side and its vertical edges thickened 5x for a bracket look,
+     and its bottom (screen y~193, plus a few px more from the thick edges'
+     square line caps) started overlapping this candle's old top (y=175) by
+     nearly 20px. Box 1 is nearly full-bitmap-width, so there's no usable
+     horizontal separation from it - only vertical separation actually clears
+     it. Moved down 25 (175->200) and right 15 (33->48, cosmetic - doesn't
+     affect the collision fix). This leaves only ~8px clearance from box 1
+     before eating into the SESSIONS row's circles (which start at screen
+     y=333) - the requested 20px clearance is NOT geometrically available at
+     this candle height (129px) without shrinking the candle or accepting
+     partial overlap with the session dials; flagged to Ambar rather than
+     silently picking one. -->
 <Group x="0" y="0" width="450" height="450" name="battery_group">
 <Condition>
 <Expressions>
 <Expression name="batt_hi">[BATTERY_PERCENT] &gt; 50</Expression>
 </Expressions>
 <Compare expression="batt_hi">
-<PartDraw x="33" y="175" width="32" height="129">
+<PartDraw x="48" y="200" width="32" height="129">
 <Rectangle x="14" y="0" width="4" height="14"><Fill color="#ff007888"/></Rectangle>
 <Rectangle x="0" y="14" width="32" height="101"><Stroke color="#ff007888" thickness="2"/></Rectangle>
 <Rectangle x="14" y="115" width="4" height="14"><Fill color="#ff007888"/></Rectangle>
@@ -113,7 +127,7 @@
 <Expression name="batt_mid">[BATTERY_PERCENT] &gt; 20</Expression>
 </Expressions>
 <Compare expression="batt_mid">
-<PartDraw x="33" y="175" width="32" height="129">
+<PartDraw x="48" y="200" width="32" height="129">
 <Rectangle x="14" y="0" width="4" height="14"><Fill color="#ffCC5800"/></Rectangle>
 <Rectangle x="0" y="14" width="32" height="101"><Stroke color="#ffCC5800" thickness="2"/></Rectangle>
 <Rectangle x="14" y="115" width="4" height="14"><Fill color="#ffCC5800"/></Rectangle>
@@ -125,7 +139,7 @@
 </PartDraw>
 </Compare>
 <Default>
-<PartDraw x="33" y="175" width="32" height="129">
+<PartDraw x="48" y="200" width="32" height="129">
 <Rectangle x="14" y="0" width="4" height="14"><Fill color="#ffCC1010"/></Rectangle>
 <Rectangle x="0" y="14" width="32" height="101"><Stroke color="#ffCC1010" thickness="2"/></Rectangle>
 <Rectangle x="14" y="115" width="4" height="14"><Fill color="#ffCC1010"/></Rectangle>
@@ -139,7 +153,7 @@
 </Condition>
 </Default>
 </Condition>
-<PartText x="33" y="230" width="32" height="20">
+<PartText x="48" y="255" width="32" height="20">
 <Text align="CENTER" ellipsis="FALSE">
 <Font family="SYNC_TO_DEVICE" size="13" weight="BOLD" slant="NORMAL" color="#ffffffff">
 <Template>%s<Parameter expression="[BATTERY_PERCENT]"/></Template>
