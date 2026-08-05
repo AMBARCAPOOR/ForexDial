@@ -24,22 +24,21 @@ import com.reddoor3.forexdial.wear.WatchConstants
 class TopRowComplicationService : SuspendingComplicationDataSourceService() {
 
     override fun getPreviewData(type: ComplicationType): ComplicationData? =
-        build(101.14f, -1.49f, "SHORT", 67420f)
+        build(101.14f, "SHORT", 67420f)
 
     override suspend fun onComplicationRequest(request: ComplicationRequest): ComplicationData? {
         val prefs = getSharedPreferences(WatchConstants.PREFS, Context.MODE_PRIVATE)
         // ALWAYS refresh - see EurUsdComplicationService for why gating on
         // ==0f was the actual bug (stale-but-present values never refreshed).
         DataLayerHelper.refreshFromDataLayer(this)
-        val dxy   = prefs.getFloat(WatchConstants.KEY_DXY, 0f)
-        val yield = prefs.getFloat(WatchConstants.KEY_YIELD_SPREAD, Float.MAX_VALUE)
-        val sent  = prefs.getString(WatchConstants.KEY_SENTIMENT, "NEUT") ?: "NEUT"
-        val btc   = prefs.getFloat(WatchConstants.KEY_BTC, 0f)
+        val dxy  = prefs.getFloat(WatchConstants.KEY_DXY, 0f)
+        val sent = prefs.getString(WatchConstants.KEY_SENTIMENT, "NEUT") ?: "NEUT"
+        val btc  = prefs.getFloat(WatchConstants.KEY_BTC, 0f)
         if (dxy == 0f && btc == 0f) return null
-        return build(dxy, if (yield == Float.MAX_VALUE) null else yield, sent, btc)
+        return build(dxy, sent, btc)
     }
 
-    private fun build(dxy: Float, yield: Float?, sentiment: String, btc: Float): ComplicationData {
+    private fun build(dxy: Float, sentiment: String, btc: Float): ComplicationData {
         val bw = 432; val bh = 60
         val bitmap = Bitmap.createBitmap(bw, bh, Bitmap.Config.ARGB_8888)
         val canvas = Canvas(bitmap)
@@ -67,7 +66,15 @@ class TopRowComplicationService : SuspendingComplicationDataSourceService() {
         // (unchanged). "doesn't have to be symmetrical" per Ambar.
         val xDxy = bw * 0.27f; val xYield = bw * 0.5f; var xBtc = bw * 0.75f
 
-        val yStr = yield?.let { (if (it >= 0f) "+" else "") + "%.4f".format(it) } ?: sentiment
+        // Ambar 2026-07-30: always show the direction word (LONG/SHORT/NEUT),
+        // not the raw spread number. Doubly right given the underlying FRED
+        // series is monthly (confirmed 2026-07-29) - a 4-decimal number
+        // implies a precision/freshness the data doesn't actually have; the
+        // word states the only thing that's really known (direction) without
+        // that false impression. BTC's gap-based positioning (below) already
+        // measures this string's real width each render, so it adapts
+        // automatically now that it's shorter than the old numeric format.
+        val yStr = sentiment
         val btcStr = if (btc > 0f) "%.0f".format(btc) else null
 
         // Ambar 2026-07-30: BTC moved left by 25% of the gap between yield's

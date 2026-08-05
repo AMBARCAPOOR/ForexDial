@@ -74,11 +74,26 @@
      tall enough to contain wick(14) + body(101) + wick(14) with NO negative
      local coordinates, since it's unconfirmed whether PartDraw clips children
      to its own declared box. Local y=14 is the body top, y=115 is the body
-     bottom, throughout. -->
+     bottom, throughout.
+
+     BUG FIXED 2026-07-30 (found by Ambar - "showing blue at all power
+     levels"): the threshold expressions were "[BATTERY_PERCENT] - 50" and
+     "- 20", relying on Compare's non-zero=true semantic. That's only exactly
+     zero when battery is precisely 50 or 20 - at every OTHER level, positive
+     OR negative, the subtraction is non-zero and therefore "true", so the
+     first (cyan) branch won essentially always. Never caught because testing
+     only ever happened at 94-100% battery, where the cyan branch was also
+     the CORRECT answer - the bug was invisible until battery actually dropped
+     into the amber/red range. Fixed with real comparison operators
+     (verified against Android's WFF docs: &gt;/&gt;=/&lt;/&lt;= return actual
+     booleans, unlike arithmetic subtraction) - "[BATTERY_PERCENT] &gt; 50" /
+     "&gt; 20". NOT YET VISUALLY VERIFIED at a real low battery level or via
+     `adb shell dumpsys battery set level <N>` - do that before trusting this
+     is fully fixed, not just theoretically correct. -->
 <Group x="0" y="0" width="450" height="450" name="battery_group">
 <Condition>
 <Expressions>
-<Expression name="batt_hi">[BATTERY_PERCENT] - 50</Expression>
+<Expression name="batt_hi">[BATTERY_PERCENT] &gt; 50</Expression>
 </Expressions>
 <Compare expression="batt_hi">
 <PartDraw x="33" y="175" width="32" height="129">
@@ -95,7 +110,7 @@
 <Default>
 <Condition>
 <Expressions>
-<Expression name="batt_mid">[BATTERY_PERCENT] - 20</Expression>
+<Expression name="batt_mid">[BATTERY_PERCENT] &gt; 20</Expression>
 </Expressions>
 <Compare expression="batt_mid">
 <PartDraw x="33" y="175" width="32" height="129">

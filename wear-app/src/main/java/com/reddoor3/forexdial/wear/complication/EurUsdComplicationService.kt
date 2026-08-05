@@ -68,6 +68,27 @@ class EurUsdComplicationService : SuspendingComplicationDataSourceService() {
 
         val tf = Typeface.create("sans-serif-condensed", Typeface.BOLD)
 
+        // Ambar 2026-07-30: two boxes, not one - a box around the rate, a
+        // separate smaller one around the pips line. Both coloured by
+        // pipColor (already computed above for the pip digits), so this is
+        // "A" (the boxes) and "B.2" (direction-coloured border) in one pass -
+        // no separate WFF Condition needed since the colour logic already
+        // lives right here in Kotlin.
+        //
+        // Horizontal room is deliberate, not incidental: the battery candle
+        // sits at absolute screen x=33-65 (this bitmap starts at screen
+        // x=9, so that's local x=24-56) - box 1 starts well clear of it at
+        // local x=70. The right side stops well short of the bitmap's own
+        // edge (432) to reserve space for the alert symbol (bull/bear+fire,
+        // still to be built and verified on-device - not drawn yet).
+        val boxPaint = Paint(Paint.ANTI_ALIAS_FLAG).apply {
+            style = Paint.Style.STROKE
+            strokeWidth = 3f
+            color = pipColor
+        }
+        canvas.drawRect(70f, 8f, 362f, 113f, boxPaint)   // box 1: the rate
+        canvas.drawRect(130f, 120f, 302f, 148f, boxPaint) // box 2: the pips line, smaller
+
         val mainPaint = Paint(Paint.ANTI_ALIAS_FLAG).apply {
             typeface = tf
             textSize = 90f

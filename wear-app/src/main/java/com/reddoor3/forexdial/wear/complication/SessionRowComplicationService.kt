@@ -30,8 +30,11 @@ class SessionRowComplicationService : SuspendingComplicationDataSourceService() 
         val tf      = Typeface.create("sans-serif-condensed", Typeface.BOLD)
         val tfLight = Typeface.create("sans-serif-condensed", Typeface.NORMAL)
 
+        // Ambar 2026-07-30: pre/post corrected from yellow (#ccaa00, the old
+        // locked-design value) to orange - matching the same #FF7700 used
+        // everywhere else on the face for the "down/caution" meaning.
         val cOpen  = Color.parseColor("#00cc55")
-        val cPre   = Color.parseColor("#ccaa00")
+        val cPre   = Color.parseColor("#FF7700")
         val cClose = Color.parseColor("#cc1100")
 
         val now = ZonedDateTime.now()
