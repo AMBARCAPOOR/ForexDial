@@ -46,7 +46,7 @@ class AlertComplicationService : SuspendingComplicationDataSourceService() {
             }
             val animal = if (rising) "🐂" else "🐻" // bull / bear
             canvas.drawText(animal, bw / 2f, 48f, emojiPaint)
-            canvas.drawText("🔥", bw / 2f, 96f, emojiPaint) // fire
+            canvas.drawText("🧊", bw / 2f, 96f, emojiPaint) // ice - Ambar testing vs fire
         }
 
         return SmallImageComplicationData.Builder(
