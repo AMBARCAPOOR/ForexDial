@@ -8,6 +8,7 @@ import android.os.Handler
 import android.os.Looper
 import androidx.wear.watchface.complications.datasource.ComplicationDataSourceUpdateRequester
 import com.google.android.gms.wearable.Wearable
+import com.reddoor3.forexdial.wear.complication.AlertComplicationService
 import com.reddoor3.forexdial.wear.complication.EurUsdComplicationService
 import com.reddoor3.forexdial.wear.complication.EurUsdPipComplicationService
 import com.reddoor3.forexdial.wear.complication.EurUsdPipsComplicationService
@@ -47,7 +48,12 @@ class RefreshRequestReceiver : BroadcastReceiver() {
                 EurUsdComplicationService::class.java,
                 EurUsdPipComplicationService::class.java,
                 EurUsdPipsComplicationService::class.java,
-                TopRowComplicationService::class.java
+                TopRowComplicationService::class.java,
+                // Included 2026-08-05: without this, a fired alert could take
+                // up to its full poll period to appear, since the phone's
+                // push notification is unreliable on this device. A tap
+                // anywhere on the face now surfaces a pending alert too.
+                AlertComplicationService::class.java
             ).forEach { cls ->
                 runCatching {
                     ComplicationDataSourceUpdateRequester

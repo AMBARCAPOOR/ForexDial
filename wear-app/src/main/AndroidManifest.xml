@@ -75,7 +75,12 @@
                 <action android:name="android.support.wearable.complications.ACTION_COMPLICATION_UPDATE_REQUEST"/>
             </intent-filter>
             <meta-data android:name="android.support.wearable.complications.SUPPORTED_TYPES" android:value="SMALL_IMAGE"/>
-            <meta-data android:name="android.support.wearable.complications.UPDATE_PERIOD_SECONDS" android:value="300"/>
+            <!-- 60s, not the 300s used by the price complications: this one
+                 gates a time-sensitive alert, and the phone's data-change
+                 push is unreliable on this device (confirmed 2026-07-29), so
+                 this poll is the dependable floor on how late an alert can
+                 surface. Cheap - it redraws a 44x129 bitmap. -->
+            <meta-data android:name="android.support.wearable.complications.UPDATE_PERIOD_SECONDS" android:value="60"/>
         </service>
 
         <service
