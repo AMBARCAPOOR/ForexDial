@@ -5,10 +5,33 @@ A terminal-style forex watch face for **Wear OS 3+** (built and tested on a Sams
 Shows EUR/USD with pip-level precision, the DXY dollar index, BTC, the EUR–US 2-year yield spread, live market-session status for XETRA / LSE / NYSE, and a price alert that buzzes your wrist and flashes on screen when EUR/USD crosses a level you set.
 
 <p align="center">
-  <img src="docs/screenshots/watchface.png" width="320" alt="ForexDial watch face">
+  <img src="docs/screenshots/watchface.png" width="340" alt="ForexDial watch face">
 </p>
 
-*(The small battery glyph over the YIELD label is the system charging indicator — the watch was docked when this was taken, not part of the face.)*
+<p align="center"><em>Live, on a Galaxy Watch 7. EUR/USD down on the day — so the rate box, pip digits, pips bar and yield all read orange. Markets closed (Sunday), battery healthy.</em></p>
+
+---
+
+## What it looks like
+
+Everything is colour-coded on one convention: **cyan = up, orange = down.** One glance tells you direction without reading a number.
+
+| Bullish, all sessions open | Pre-market, all three |
+|---|---|
+| <img src="docs/screenshots/state-bullish-open.png" width="300" alt="Bullish tape with all markets open"> | <img src="docs/screenshots/state-premarket.png" width="300" alt="All three exchanges in the pre-market window"> |
+| Rate rising, so the box, pips and yield go cyan. All three dials green. | Within an hour of the open — dials amber. Tape still cyan. |
+
+| Alert fired upward | Alert fired downward |
+|---|---|
+| <img src="docs/screenshots/alert-up.png" width="300" alt="Price alert firing upward"> | <img src="docs/screenshots/alert-down.png" width="300" alt="Price alert firing downward"> |
+| Bell + cyan arrow, flashing once a second. Europe open, New York still shut. | Orange arrow for a downward cross. London closed, New York open, Frankfurt post-close. |
+
+| Battery 20–50% | Battery under 20% |
+|---|---|
+| <img src="docs/screenshots/battery-amber.png" width="300" alt="Battery candle in the amber band"> | <img src="docs/screenshots/battery-low.png" width="300" alt="Battery candle in the red band"> |
+| The candle turns amber and the fill drops with the charge. | Red below 20%. Wick, body and fill all shift together. |
+
+<sub>The market-state and alert shots are staged — the same rendering code fed fixed values, so a single screenshot session could show states that depend on the time of day or on price crossing a threshold. The hero image above and the battery shots are live.</sub>
 
 ---
 
@@ -99,13 +122,9 @@ Long-press the watch face → swipe to **ForexDial** → tap to select.
   <img src="docs/screenshots/phone-app.png" width="260" alt="Phone app with a price alert armed">
 </p>
 
-When EUR/USD **crosses** that level in either direction, the watch buzzes twice and a flashing bell + direction arrow appears on the right of the clock:
+When EUR/USD **crosses** that level in either direction, the watch buzzes twice and a flashing bell + direction arrow appears on the right of the clock — see [the alert shots above](#what-it-looks-like).
 
-<p align="center">
-  <img src="docs/screenshots/alert-firing.png" width="320" alt="Watch face with a price alert firing">
-</p>
-
-**Tap the icon on the watch to clear it.** The arrow shows the direction of the *crossing*, so it can legitimately point down while the pips bar shows ▲ — as in the shot above.
+**Tap the icon on the watch to clear it.** The arrow shows the direction of the *crossing*, not the current tick — so it can legitimately point down while the pips bar shows ▲.
 
 It fires on the *crossing*, not on merely being past the level — so it alerts once per crossing rather than nagging every sync for as long as price stays beyond your threshold. Clearing it is permanent for that crossing: dismiss it and it stays gone until price crosses again. Leave the field blank or `0` to disable.
 
