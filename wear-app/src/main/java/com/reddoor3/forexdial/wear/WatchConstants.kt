@@ -24,6 +24,11 @@ object WatchConstants {
     const val KEY_ALERT_DIR   = "alert_dir"
     const val KEY_ALERT_LEVEL = "alert_level"
 
+    // Watch-local only: the ts of the alert we have already buzzed for, so
+    // one crossing buzzes once no matter how many times, or via which path,
+    // the data is re-read.
+    const val KEY_ALERT_BUZZED_TS = "alert_buzzed_ts"
+
     // Watch-local only: the ts of the alert the user has already cleared.
     // Never sent by the phone - dismissal is entirely a watch-side decision
     // so a tap clears instantly without a phone round-trip.

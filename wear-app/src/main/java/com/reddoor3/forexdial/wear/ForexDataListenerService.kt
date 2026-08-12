@@ -58,9 +58,15 @@ class ForexDataListenerService : WearableListenerService() {
         }
         prefs.commit()
 
+        // Route through the same guard the polling path uses, so whichever
+        // path sees the new alert first buzzes and the other doesn't repeat
+        // it. newAlertTs is no longer needed to gate this - AlertBuzzer does
+        // its own already-buzzed check - but it still tells us a push
+        // genuinely arrived, which is worth knowing given how rarely it does.
         if (newAlertTs != 0L) {
-            vibrateForAlert()
+            android.util.Log.d("FDD_Listener", "push delivered alert ts=$newAlertTs")
         }
+        AlertBuzzer.buzzIfNewAlert(this)
 
         if (forexChanged) {
             listOf(
@@ -92,21 +98,4 @@ class ForexDataListenerService : WearableListenerService() {
         }
     }
 
-    // Double buzz so it's distinguishable from an ordinary system
-    // notification. VIBRATE is a normal permission (granted at install, no
-    // runtime prompt), so this needs nothing from the user to work.
-    private fun vibrateForAlert() {
-        runCatching {
-            val vibrator =
-                if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.S) {
-                    (getSystemService(Context.VIBRATOR_MANAGER_SERVICE)
-                        as android.os.VibratorManager).defaultVibrator
-                } else {
-                    @Suppress("DEPRECATION")
-                    getSystemService(Context.VIBRATOR_SERVICE) as android.os.Vibrator
-                }
-            val pattern = longArrayOf(0, 250, 150, 250)
-            vibrator.vibrate(android.os.VibrationEffect.createWaveform(pattern, -1))
-        }
-    }
 }

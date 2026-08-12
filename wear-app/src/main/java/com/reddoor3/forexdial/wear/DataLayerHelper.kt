@@ -50,6 +50,12 @@ object DataLayerHelper {
             }
             val committed = prefs.commit()
             Log.d(TAG, "refreshFromDataLayer: commit()=$committed")
+
+            // Buzz from HERE, not only from the push listener. This is the
+            // path that actually runs reliably on this device (every
+            // complication calls it on every request), so it's the one the
+            // alert vibration has to hang off. See AlertBuzzer.
+            AlertBuzzer.buzzIfNewAlert(context)
         } catch (e: Exception) {
             Log.e(TAG, "refreshFromDataLayer: EXCEPTION ${e.javaClass.simpleName}: ${e.message}", e)
         }
