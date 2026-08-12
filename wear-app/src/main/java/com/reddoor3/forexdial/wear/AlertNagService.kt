@@ -48,7 +48,11 @@ class AlertNagService : Service() {
         private const val TAG = "FDD_AlertNag"
         private const val CHANNEL_ID = "forexdial_alert"
         private const val NOTIF_ID = 4711
-        private const val INTERVAL_MS = 60_000L
+        // Ambar 2026-08-12: 5s spacing, and AlertBuzzer.MAX_BUZZES caps it at
+        // 60 ticks, so an unacknowledged alert nags hard for 5 minutes and
+        // then stops. Paired values - changing one without the other changes
+        // the total duration.
+        private const val INTERVAL_MS = 5_000L
 
         fun start(ctx: Context) {
             runCatching {

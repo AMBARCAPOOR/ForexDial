@@ -23,20 +23,20 @@ object AlertBuzzer {
 
     private const val TAG = "FDD_AlertBuzzer"
 
-    // Ambar 2026-08-12: "can it keep buzzing until deactivated?" - yes. It now
-    // re-buzzes until the alert is dismissed, instead of once per crossing.
+    // Ambar 2026-08-12: "every 5 seconds for 5 minutes or dismissed."
     //
-    // 45s rather than 60s deliberately: the alert complication polls on a 60s
-    // period, and a 60s gate would sometimes be evaluated a fraction early and
-    // skip that round, giving a ragged 2-minute rhythm. 45s means every poll
-    // qualifies, so the real cadence is the poll's own ~60s.
-    private const val REPEAT_INTERVAL_MS = 45_000L
+    // This is a DEBOUNCE, not the cadence - AlertNagService owns the rhythm.
+    // It only exists to stop the complication-polling path double-buzzing when
+    // several complications refresh at once. Must stay comfortably BELOW the
+    // service's interval or it would swallow legitimate ticks: at 5s spacing a
+    // 45s gate (the previous value, sized for a 60s rhythm) would have blocked
+    // eight of every nine buzzes.
+    private const val REPEAT_INTERVAL_MS = 4_000L
 
-    // Safety cap, ~20 minutes of nagging. Without it an alert that fires while
-    // the watch is on a charger overnight would buzz until the battery died.
-    // Raise or drop this freely - it's the one number here that's a judgement
-    // call rather than a constraint.
-    private const val MAX_BUZZES = 20
+    // 60 buzzes at the service's 5s spacing = 5 minutes, then it gives up.
+    // The cap is what stops an alert firing overnight on a charger from
+    // buzzing until the battery is flat.
+    private const val MAX_BUZZES = 60
 
     // Complications call refreshFromDataLayer concurrently, so two threads can
     // reach the check at once. Synchronized, and the marker is committed

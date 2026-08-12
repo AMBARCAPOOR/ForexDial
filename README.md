@@ -124,7 +124,7 @@ Long-press the watch face → swipe to **ForexDial** → tap to select.
 
 When EUR/USD **crosses** that level in either direction, the watch buzzes twice and a flashing bell + direction arrow appears on the right of the clock — see [the alert shots above](#what-it-looks-like).
 
-It keeps buzzing about once a minute until you acknowledge it (capped at 20 reminders), with an ongoing notification while it's active. **Tap the icon on the watch — or the notification — to clear it.** The arrow shows the direction of the *crossing*, not the current tick, so it can legitimately point down while the pips bar shows ▲.
+It keeps buzzing every 5 seconds until you acknowledge it, giving up after 5 minutes, with an ongoing notification while it's active. **Tap the icon on the watch — or the notification — to clear it.** The arrow shows the direction of the *crossing*, not the current tick, so it can legitimately point down while the pips bar shows ▲.
 
 > **Exempt the watch app from battery optimisation, or you'll only get one buzz.**
 > The repeating reminder runs as a foreground service, and Android refuses to
