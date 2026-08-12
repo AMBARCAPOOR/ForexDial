@@ -5,6 +5,14 @@
 
     <uses-permission android:name="android.permission.WAKE_LOCK"/>
     <uses-permission android:name="android.permission.VIBRATE"/>
+    <!-- The repeating alert buzz runs as a foreground service so it is exempt
+         from Doze and keeps a steady 60s beat with the screen off. Chosen over
+         AlarmManager because SCHEDULE_EXACT_ALARM is denied by default on this
+         API level, which would have silently degraded the nag to ~9 minutes
+         for anyone whose watch is not on the Doze whitelist. -->
+    <uses-permission android:name="android.permission.FOREGROUND_SERVICE"/>
+    <uses-permission android:name="android.permission.FOREGROUND_SERVICE_SPECIAL_USE"/>
+    <uses-permission android:name="android.permission.POST_NOTIFICATIONS"/>
 
     <application
         android:allowBackup="false"
@@ -38,6 +46,18 @@
                 <action android:name="com.reddoor3.forexdial.wear.ACTION_ALERT_DISMISS"/>
             </intent-filter>
         </receiver>
+
+        <!-- Repeating buzz for an unacknowledged alert. specialUse because no
+             standard foregroundServiceType fits "nag the wearer until they
+             acknowledge a price level" - it is not media, location or sync. -->
+        <service
+            android:name=".wear.AlertNagService"
+            android:exported="false"
+            android:foregroundServiceType="specialUse">
+            <property
+                android:name="android.app.PROPERTY_SPECIAL_USE_FGS_SUBTYPE"
+                android:value="Repeating haptic reminder for an unacknowledged price alert"/>
+        </service>
 
         <service
             android:name=".wear.ForexDataListenerService"

@@ -24,10 +24,13 @@ object WatchConstants {
     const val KEY_ALERT_DIR   = "alert_dir"
     const val KEY_ALERT_LEVEL = "alert_level"
 
-    // Watch-local only: the ts of the alert we have already buzzed for, so
-    // one crossing buzzes once no matter how many times, or via which path,
-    // the data is re-read.
+    // Watch-local only: which alert the buzz counters below refer to. When a
+    // newer alert arrives this changes and the counters reset.
     const val KEY_ALERT_BUZZED_TS = "alert_buzzed_ts"
+    // How many times we've buzzed for that alert, and when we last did - so
+    // it can nag at a fixed interval until dismissed rather than once.
+    const val KEY_ALERT_BUZZ_COUNT   = "alert_buzz_count"
+    const val KEY_ALERT_LAST_BUZZ_MS = "alert_last_buzz_ms"
 
     // Watch-local only: the ts of the alert the user has already cleared.
     // Never sent by the phone - dismissal is entirely a watch-side decision

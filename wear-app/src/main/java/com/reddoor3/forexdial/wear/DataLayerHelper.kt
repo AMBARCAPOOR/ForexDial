@@ -51,11 +51,22 @@ object DataLayerHelper {
             val committed = prefs.commit()
             Log.d(TAG, "refreshFromDataLayer: commit()=$committed")
 
-            // Buzz from HERE, not only from the push listener. This is the
-            // path that actually runs reliably on this device (every
-            // complication calls it on every request), so it's the one the
-            // alert vibration has to hang off. See AlertBuzzer.
-            AlertBuzzer.buzzIfNewAlert(context)
+            // Noticed from HERE, not the push listener - that path is
+            // unreliable on this device, while this one runs on every
+            // complication request.
+            //
+            // Buzz DIRECTLY first, then try to hand the repeat to
+            // AlertNagService. Order matters: starting a foreground service
+            // from the background is DENIED unless the app is exempt from
+            // battery optimisation (verified on-device 2026-08-12 -
+            // ForegroundServiceStartNotAllowedException with code:DENIED once
+            // the allowlist entry was removed). Without this direct call, a
+            // user who hasn't granted that exemption would get no buzz at all
+            // rather than degrading to a single one.
+            if (AlertBuzzer.shouldKeepNagging(context)) {
+                AlertBuzzer.buzzIfNewAlert(context)
+                AlertNagService.start(context)
+            }
         } catch (e: Exception) {
             Log.e(TAG, "refreshFromDataLayer: EXCEPTION ${e.javaClass.simpleName}: ${e.message}", e)
         }

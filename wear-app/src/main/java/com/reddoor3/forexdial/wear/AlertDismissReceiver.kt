@@ -32,6 +32,10 @@ class AlertDismissReceiver : BroadcastReceiver() {
 
         prefs.edit().putLong(WatchConstants.KEY_ALERT_DISMISSED_TS, activeTs).commit()
 
+        // Stop the repeat immediately, and drop the ongoing notification with
+        // it, rather than waiting for the service's next tick to notice.
+        AlertNagService.stop(context)
+
         runCatching {
             ComplicationDataSourceUpdateRequester
                 .create(context, ComponentName(context, AlertComplicationService::class.java))
