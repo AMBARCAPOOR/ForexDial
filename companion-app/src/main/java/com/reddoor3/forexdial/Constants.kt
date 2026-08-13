@@ -54,7 +54,17 @@ object Constants {
     const val KEY_SUNSET_EP   = "sunset_epoch"
 
     // Price alert state, phone side
-    const val KEY_ALERT_LEVEL      = "alert_level"       // user-set threshold, 0 = disabled
+    // Comma-separated list of thresholds, e.g. "1.16000,1.15000". Empty =
+    // disabled. Deliberately a list even though the UI currently offers two
+    // fields: going to N levels then costs a UI change rather than a
+    // rewrite of the storage, payload and crossing check.
+    const val KEY_ALERT_LEVELS     = "alert_levels"
+    // Legacy single threshold, read once to migrate old installs into the
+    // list above. Not written any more.
+    const val KEY_ALERT_LEVEL      = "alert_level"
+    // Which level actually fired, so the watch can show the crossed price
+    // rather than "one of the configured ones".
+    const val KEY_ALERT_FIRED_LEVEL = "alert_fired_level"
     const val KEY_ALERT_LAST_PRICE = "alert_last_price"  // previous observation, for crossing detection
     const val KEY_ALERT_FIRED_TS   = "alert_fired_ts"
     const val KEY_ALERT_FIRED_DIR  = "alert_fired_dir"

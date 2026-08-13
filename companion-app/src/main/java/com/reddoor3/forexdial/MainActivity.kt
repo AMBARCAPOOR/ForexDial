@@ -21,6 +21,7 @@ class MainActivity : AppCompatActivity() {
     private lateinit var statusText: TextView
     private lateinit var valuesText: TextView
     private lateinit var alertInput: EditText
+    private lateinit var alertInput2: EditText
     private lateinit var alertStatus: TextView
     private val handler = Handler(Looper.getMainLooper())
     private val fmt = SimpleDateFormat("HH:mm:ss", Locale.getDefault())
@@ -73,22 +74,26 @@ class MainActivity : AppCompatActivity() {
         }
 
         TextView(this).apply {
-            text = "Alerts on CROSSING this level in either direction. " +
-                   "Blank or 0 disables. Clear the alert by tapping the icon on the watch."
+            text = "Alerts on CROSSING a level in either direction — so one level " +
+                   "catches both a break up and a break down. Blank or 0 disables " +
+                   "that slot. Clear a fired alert by tapping the icon on the watch."
             textSize = 12f
             setPadding(0, 0, 0, 12)
             root.addView(this)
         }
 
-        alertInput = EditText(this).apply {
-            hint = "e.g. 1.1600"
+        val saved = AlertLevels.read(getSharedPreferences(Constants.PREFS_NAME, MODE_PRIVATE))
+
+        fun levelField(index: Int) = EditText(this).apply {
+            hint = if (index == 0) "Level 1 — e.g. 1.16000" else "Level 2 — e.g. 1.15000"
             inputType = android.text.InputType.TYPE_CLASS_NUMBER or
                         android.text.InputType.TYPE_NUMBER_FLAG_DECIMAL
-            val saved = getSharedPreferences(Constants.PREFS_NAME, MODE_PRIVATE)
-                .getFloat(Constants.KEY_ALERT_LEVEL, 0f)
-            if (saved > 0f) setText("%.5f".format(saved))
+            saved.getOrNull(index)?.let { setText("%.5f".format(it)) }
             root.addView(this)
         }
+
+        alertInput  = levelField(0)
+        alertInput2 = levelField(1)
 
         alertStatus = TextView(this).apply {
             textSize = 13f
@@ -140,37 +145,45 @@ class MainActivity : AppCompatActivity() {
             append("BTC:     ${if (btc    == 0f) "—" else "$%.0f".format(btc)}")
         }
 
-        val level   = prefs.getFloat(Constants.KEY_ALERT_LEVEL, 0f)
-        val firedTs = prefs.getLong(Constants.KEY_ALERT_FIRED_TS, 0L)
-        val firedDir = prefs.getString(Constants.KEY_ALERT_FIRED_DIR, "") ?: ""
+        val levels     = AlertLevels.read(prefs)
+        val firedTs    = prefs.getLong(Constants.KEY_ALERT_FIRED_TS, 0L)
+        val firedDir   = prefs.getString(Constants.KEY_ALERT_FIRED_DIR, "") ?: ""
+        val firedLevel = prefs.getFloat(Constants.KEY_ALERT_FIRED_LEVEL, 0f)
         alertStatus.text = buildString {
-            append(if (level <= 0f) "Alert: off" else "Alert: armed at %.5f".format(level))
+            append(
+                if (levels.isEmpty()) "Alerts: off"
+                else "Armed: " + levels.joinToString(", ") { "%.5f".format(it) }
+            )
             if (firedTs > 0L) {
-                append("\nLast fired: $firedDir at ${fmt.format(Date(firedTs))}")
+                append("\nLast fired: $firedDir")
+                if (firedLevel > 0f) append(" through %.5f".format(firedLevel))
+                append(" at ${fmt.format(Date(firedTs))}")
             }
         }
     }
 
     private fun saveAlertLevel() {
-        val raw = alertInput.text.toString().trim()
-        val level = if (raw.isEmpty()) 0f else raw.toFloatOrNull()
-        if (level == null) {
-            Toast.makeText(this, "Not a valid number", Toast.LENGTH_SHORT).show()
-            return
+        val levels = mutableListOf<Float>()
+        for (field in listOf(alertInput, alertInput2)) {
+            val raw = field.text.toString().trim()
+            if (raw.isEmpty()) continue          // blank slot = unused
+            val v = raw.toFloatOrNull()
+            if (v == null) {
+                Toast.makeText(this, "\"$raw\" is not a valid number", Toast.LENGTH_SHORT).show()
+                return                            // reject the whole save rather
+            }                                     // than silently dropping one
+            if (v > 0f) levels.add(v)
         }
 
-        val prefs = getSharedPreferences(Constants.PREFS_NAME, MODE_PRIVATE)
-        // Reset the crossing baseline whenever the level changes, so an
-        // already-past price doesn't instantly count as a fresh crossing the
-        // moment the new level is armed.
-        prefs.edit()
-            .putFloat(Constants.KEY_ALERT_LEVEL, level)
-            .putFloat(Constants.KEY_ALERT_LAST_PRICE, 0f)
-            .apply()
+        AlertLevels.write(getSharedPreferences(Constants.PREFS_NAME, MODE_PRIVATE), levels)
 
         Toast.makeText(
             this,
-            if (level <= 0f) "Alert disabled" else "Alert armed at %.5f".format(level),
+            when (levels.size) {
+                0 -> "Alerts disabled"
+                1 -> "Armed at %.5f".format(levels[0])
+                else -> "Armed at ${levels.joinToString(" and ") { "%.5f".format(it) }}"
+            },
             Toast.LENGTH_SHORT
         ).show()
         refreshDisplay()

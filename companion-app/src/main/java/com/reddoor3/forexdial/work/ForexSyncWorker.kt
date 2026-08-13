@@ -8,6 +8,7 @@ import androidx.work.WorkManager
 import androidx.work.WorkerParameters
 import com.google.android.gms.wearable.PutDataMapRequest
 import com.google.android.gms.wearable.Wearable
+import com.reddoor3.forexdial.AlertLevels
 import com.reddoor3.forexdial.Constants
 import com.reddoor3.forexdial.api.ApiKeys
 import com.reddoor3.forexdial.api.FinnhubClient
@@ -153,7 +154,9 @@ class ForexSyncWorker(context: Context, params: WorkerParameters) : CoroutineWor
 
         val alertTs    = prefs.getLong(Constants.KEY_ALERT_FIRED_TS, 0L)
         val alertDir   = prefs.getString(Constants.KEY_ALERT_FIRED_DIR, "") ?: ""
-        val alertLevel = prefs.getFloat(Constants.KEY_ALERT_LEVEL, 0f)
+        // The level that actually fired, not "one of the configured ones" -
+        // with more than one armed, the watch has to say which broke.
+        val alertLevel = prefs.getFloat(Constants.KEY_ALERT_FIRED_LEVEL, 0f)
 
         return try {
             val request = PutDataMapRequest.create(Constants.PATH_FOREX).apply {
@@ -191,26 +194,52 @@ class ForexSyncWorker(context: Context, params: WorkerParameters) : CoroutineWor
         prefs: android.content.SharedPreferences,
         newPrice: Float
     ) {
-        val level = prefs.getFloat(Constants.KEY_ALERT_LEVEL, 0f)
-        val prev  = prefs.getFloat(Constants.KEY_ALERT_LAST_PRICE, 0f)
+        val levels = readLevels(prefs)
+        val prev   = prefs.getFloat(Constants.KEY_ALERT_LAST_PRICE, 0f)
 
         // Always advance the baseline, even when no threshold is set - so
         // enabling an alert later compares against a current price rather
         // than a stale one from whenever the feature was last used.
         prefs.edit().putFloat(Constants.KEY_ALERT_LAST_PRICE, newPrice).apply()
 
-        if (level <= 0f) return   // alert disabled
-        if (prev <= 0f) return    // no baseline yet - first observation only
+        if (levels.isEmpty()) return  // alerts disabled
+        if (prev <= 0f) return        // no baseline yet - first observation only
 
-        val dir = when {
-            prev < level && newPrice >= level -> "UP"
-            prev > level && newPrice <= level -> "DOWN"
-            else -> return
+        // A single 3-minute step can straddle more than one level, if they sit
+        // close together or price gaps on news. Report the level NEAREST the
+        // current price - the most recently broken one, and the reference
+        // that's still relevant where price actually is.
+        //
+        // The first cut used the opposite rule (furthest past, "the most
+        // decisive break"). A JVM test of a 1.16500 -> 1.14500 gap through
+        // both 1.16000 and 1.15000 returned 1.16000, which reads as stale
+        // when price is already 150 pips below it. Nearest-to-current is both
+        // more useful and unambiguous to state.
+        var firedLevel = 0f
+        var firedDir = ""
+        var bestDistance = Float.MAX_VALUE
+        for (level in levels) {
+            val dir = when {
+                prev < level && newPrice >= level -> "UP"
+                prev > level && newPrice <= level -> "DOWN"
+                else -> continue
+            }
+            val distance = kotlin.math.abs(newPrice - level)
+            if (distance < bestDistance) {
+                bestDistance = distance
+                firedLevel = level
+                firedDir = dir
+            }
         }
+        if (firedDir.isEmpty()) return
 
         prefs.edit()
             .putLong(Constants.KEY_ALERT_FIRED_TS, System.currentTimeMillis())
-            .putString(Constants.KEY_ALERT_FIRED_DIR, dir)
+            .putString(Constants.KEY_ALERT_FIRED_DIR, firedDir)
+            .putFloat(Constants.KEY_ALERT_FIRED_LEVEL, firedLevel)
             .apply()
     }
+
+    private fun readLevels(prefs: android.content.SharedPreferences) =
+        AlertLevels.read(prefs)
 }
