@@ -2,7 +2,7 @@
 
 A terminal-style forex watch face for **Wear OS 3+** (built and tested on a Samsung Galaxy Watch 7, Wear OS 6), with a phone companion app that fetches the data.
 
-Shows EUR/USD with pip-level precision, the DXY dollar index, BTC, the EUR–US 2-year yield spread, live market-session status for XETRA / LSE / NYSE, and a price alert that buzzes your wrist and flashes on screen when EUR/USD crosses a level you set.
+Shows EUR/USD with pip-level precision, the DXY dollar index, BTC, the EUR–US 2-year yield spread, live market-session status for XETRA / LSE / NYSE, and price alerts that buzz your wrist and flash on screen when EUR/USD crosses a level you set.
 
 <p align="center">
   <img src="docs/screenshots/watchface.png" width="340" alt="ForexDial watch face">
@@ -116,7 +116,7 @@ Long-press the watch face → swipe to **ForexDial** → tap to select.
 
 **Data refresh.** The phone polls prices every 3 minutes and pushes to the watch. Tapping anywhere on the face requests an immediate sync rather than just re-reading the local cache.
 
-**Price alerts.** In the phone app, enter a level under *EUR/USD price alert* and hit save. The status line shows whether an alert is armed and when it last fired:
+**Price alerts.** In the phone app, enter up to **two levels** under *EUR/USD price alert* and hit save. Leave a slot blank to use just one, or clear both to disable. The status line shows what's armed and which level last fired:
 
 <p align="center">
   <img src="docs/screenshots/phone-app.png" width="260" alt="Phone app with a price alert armed">
@@ -138,7 +138,9 @@ It keeps buzzing every 5 seconds until you acknowledge it, giving up after 5 min
 >
 > Or on the watch: **Settings → Apps → ForexDial → Battery → Unrestricted.**
 
-It fires on the *crossing*, not on merely being past the level — so it alerts once per crossing rather than nagging every sync for as long as price stays beyond your threshold. Clearing it is permanent for that crossing: dismiss it and it stays gone until price crosses again. Leave the field blank or `0` to disable.
+It fires on the *crossing*, not on merely being past the level — so it alerts once per crossing rather than nagging every sync for as long as price stays beyond your threshold. Clearing it is permanent for that crossing: dismiss it and it stays gone until price crosses again.
+
+The levels aren't an upper/lower pair — each one is watched in **both** directions, so two levels give you four possible triggers. If a single 3-minute step gaps through both (news, thin liquidity), the watch reports the level **nearest** the current price: the most recent break, and the reference that still matters where price actually is.
 
 **Reading the face:**
 
