@@ -16,8 +16,10 @@ android {
         applicationId = "com.reddoor3.forexdial.face"
         minSdk = 33        // Wear OS 4 — minimum for Watch Face Format v1
         targetSdk = 35
-        versionCode = 1
-        versionName = "1.0"
+        // From gradle.properties - one place to bump, all three modules
+        // stay in lockstep (they install together).
+        versionCode = (project.property("forexdialVersionCode") as String).toInt()
+        versionName = project.property("forexdialVersionName") as String
     }
 
     // Every one of these otherwise emits generated Java, which becomes dex

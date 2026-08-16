@@ -11,8 +11,10 @@ android {
         applicationId = "com.reddoor3.forexdial"   // same as companion-app — required for pairing
         minSdk = 30                                  // Wear OS 3 minimum
         targetSdk = 35
-        versionCode = 1
-        versionName = "1.0"
+        // From gradle.properties - one place to bump, all three modules
+        // stay in lockstep (they install together).
+        versionCode = (project.property("forexdialVersionCode") as String).toInt()
+        versionName = project.property("forexdialVersionName") as String
     }
 
     buildTypes {

@@ -22,8 +22,10 @@ android {
         applicationId = "com.reddoor3.forexdial"
         minSdk = 26
         targetSdk = 35
-        versionCode = 1
-        versionName = "1.0"
+        // From gradle.properties - one place to bump, all three modules
+        // stay in lockstep (they install together).
+        versionCode = (project.property("forexdialVersionCode") as String).toInt()
+        versionName = project.property("forexdialVersionName") as String
         buildConfigField("String", "TWELVE_DATA_API_KEY",
             "\"${localProps.getProperty("twelveDataApiKey", "")}\"")
         // Moved out of Constants.kt 2026-08-05. It had been hardcoded in

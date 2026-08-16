@@ -42,7 +42,9 @@ class MainActivity : AppCompatActivity() {
         }
 
         TextView(this).apply {
-            text = "ForexDial"
+            // Version on screen, not just in the build file - so a bug report
+            // can name a build without anyone having to dig through Settings.
+            text = "ForexDial  v${BuildConfig.VERSION_NAME}"
             textSize = 26f
             root.addView(this)
         }

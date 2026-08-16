@@ -1,5 +1,7 @@
 # ForexDial
 
+**v1.0.0**
+
 A terminal-style forex watch face for **Wear OS 3+** (built and tested on a Samsung Galaxy Watch 7, Wear OS 6), with a phone companion app that fetches the data.
 
 Shows EUR/USD with pip-level precision, the DXY dollar index, BTC, the EUR–US 2-year yield spread, live market-session status for XETRA / LSE / NYSE, and price alerts that buzz your wrist and flash on screen when EUR/USD crosses a level you set.
@@ -190,6 +192,19 @@ Google's own WFF samples follow the same constraint — even their Weather sampl
 - Built against one device (Galaxy Watch 7, 450×450 round). Layout coordinates are tuned for that; other sizes will need adjustment.
 
 ---
+
+## Versioning
+
+Semantic versioning. The version lives in **one place** — `forexdialVersionName`
+and `forexdialVersionCode` in [`gradle.properties`](gradle.properties) — and all
+three modules read it from there, so they can never drift apart. They install
+together, so a version skew between them would be meaningless.
+
+The running version is shown at the top of the phone app, and each release is
+tagged `v<version>` in git.
+
+When bumping: raise `forexdialVersionCode` by 1 as well as the name. Android
+compares the code, not the name, when deciding whether an install is an upgrade.
 
 ## License
 
