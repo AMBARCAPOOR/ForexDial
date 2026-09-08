@@ -10,7 +10,7 @@ Shows EUR/USD with pip-level precision, the DXY dollar index, BTC, the EUR–US 
   <img src="docs/screenshots/watchface.png" width="340" alt="ForexDial watch face">
 </p>
 
-<p align="center"><em>Live, on a Galaxy Watch 7. EUR/USD down on the day — so the rate box, pip digits, pips bar and yield all read orange. Markets closed (Sunday), battery healthy.</em></p>
+<p align="center"><em>Live, on a Galaxy Watch 7. EUR/USD up on the day — so the rate box, pip digits, pips bar and yield all read cyan. Tokyo open, London and New York closed, battery full.</em></p>
 
 ---
 
