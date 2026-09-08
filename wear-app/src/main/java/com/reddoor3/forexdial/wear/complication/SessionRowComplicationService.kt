@@ -12,7 +12,7 @@ import java.time.ZoneId
 import java.time.ZonedDateTime
 import java.time.format.DateTimeFormatter
 
-// TOKYO | LSE | NYSE in one bitmap/one slot. Session status is pure local
+// TSE | LSE | NYSE in one bitmap/one slot. Session status is pure local
 // calendar math (MarketSessionCalculator) - no phone data dependency, so this
 // complication never returns null and needs no DataLayer refresh.
 class SessionRowComplicationService : SuspendingComplicationDataSourceService() {
@@ -58,12 +58,13 @@ class SessionRowComplicationService : SuspendingComplicationDataSourceService() 
         // time (24->32).
         // Ambar 2026-07-30: a 5-letter label is wider than "LSE"/"NYSE" at the
         // same size and poked outside its circle. Sized per-exchange rather
-        // than dropping all three. "TOKYO" replaced "XETRA" 2026-09-07 and is
-        // also 5 letters, so it inherits the same 22f without re-measuring.
+        // than dropping all three. "XETRA" was replaced by "TSE" 2026-09-07 -
+        // at 3 letters it no longer needs the shrink, so it takes the full 26f
+        // like LSE/NYSE and every label on the row is now the same size.
         // Left-most position kept: Tokyo opens first, so the row still reads
-        // west-to-east in session order.
+        // in session order.
         listOf(
-            Triple(ZoneId.of("Asia/Tokyo"),       bw * 0.28f, MarketSessionCalculator.getTokyoStatus()) to Pair("TOKYO", 22f),
+            Triple(ZoneId.of("Asia/Tokyo"),       bw * 0.28f, MarketSessionCalculator.getTseStatus()) to Pair("TSE", 26f),
             Triple(ZoneId.of("Europe/London"),     bw * 0.5f, MarketSessionCalculator.getLseStatus()) to Pair("LSE", 26f),
             Triple(ZoneId.of("America/New_York"), bw * 0.72f, MarketSessionCalculator.getNyseStatus()) to Pair("NYSE", 26f)
         ).forEach { (triple, exchangeAndSize) ->
@@ -89,7 +90,7 @@ class SessionRowComplicationService : SuspendingComplicationDataSourceService() 
 
         return SmallImageComplicationData.Builder(
             smallImage = SmallImage.Builder(image = Icon.createWithBitmap(bitmap), type = SmallImageType.PHOTO).build(),
-            contentDescription = PlainComplicationText.Builder("Tokyo, LSE, NYSE session status").build()
+            contentDescription = PlainComplicationText.Builder("TSE, LSE, NYSE session status").build()
         ).build()
     }
 }

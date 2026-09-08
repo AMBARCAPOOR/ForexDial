@@ -28,7 +28,7 @@
 </Complication>
 <Complication type="EMPTY"/>
 </ComplicationSlot>
-<ComplicationSlot slotId="2" name="SESSIONS" displayName="Tokyo/LSE/NYSE" isCustomizable="FALSE" supportedTypes="SMALL_IMAGE EMPTY" x="9" y="325" width="432" height="100" alpha="255">
+<ComplicationSlot slotId="2" name="SESSIONS" displayName="TSE/LSE/NYSE" isCustomizable="FALSE" supportedTypes="SMALL_IMAGE EMPTY" x="9" y="325" width="432" height="100" alpha="255">
 <DefaultProviderPolicy primaryProvider="com.reddoor3.forexdial/com.reddoor3.forexdial.wear.complication.SessionRowComplicationService" primaryProviderType="SMALL_IMAGE" defaultSystemProvider="EMPTY" defaultSystemProviderType="EMPTY"/>
 <BoundingBox x="0" y="0" width="432" height="100"/>
 <Complication type="SMALL_IMAGE">

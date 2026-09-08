@@ -4,7 +4,7 @@
 
 A terminal-style forex watch face for **Wear OS 3+** (built and tested on a Samsung Galaxy Watch 7, Wear OS 6), with a phone companion app that fetches the data.
 
-Shows EUR/USD with pip-level precision, the DXY dollar index, BTC, the EUR–US 2-year yield spread, live market-session status for Tokyo / LSE / NYSE, and price alerts that buzz your wrist and flash on screen when EUR/USD crosses a level you set.
+Shows EUR/USD with pip-level precision, the DXY dollar index, BTC, the EUR–US 2-year yield spread, live market-session status for TSE / LSE / NYSE, and price alerts that buzz your wrist and flash on screen when EUR/USD crosses a level you set.
 
 <p align="center">
   <img src="docs/screenshots/watchface.png" width="340" alt="ForexDial watch face">

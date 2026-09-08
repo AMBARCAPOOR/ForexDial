@@ -17,8 +17,9 @@ object MarketSessionCalculator {
     fun getNyseStatus(): SessionStatus = calcStatus(ZonedDateTime.now(NY),     LocalTime.of(9, 30), LocalTime.of(16, 0))
     fun getLseStatus():  SessionStatus = calcStatus(ZonedDateTime.now(LONDON), LocalTime.of(8, 0),  LocalTime.of(16, 30))
 
-    // Tokyo replaced XETRA 2026-09-07 (Ambar). Two things make it unlike the
-    // other two:
+    // TSE (Tokyo Stock Exchange) replaced XETRA 2026-09-07 (Ambar). Labelled
+    // TSE, not TOKYO, to match LSE/NYSE - the dials name exchanges, not cities.
+    // Two things make it unlike the other two:
     //
     // 1. It breaks for lunch, 11:30-12:30 JST - no other dial on this face
     //    does. Rendering that as CLOSED would flash the dial red mid-session
@@ -41,7 +42,7 @@ object MarketSessionCalculator {
     private val TOKYO_CLOSE       = LocalTime.of(15, 30)
     private val LUNCH_STATUS      = SessionStatus.PRE_POST
 
-    fun getTokyoStatus(): SessionStatus {
+    fun getTseStatus(): SessionStatus {
         val now = ZonedDateTime.now(TOKYO)
         if (now.dayOfWeek == DayOfWeek.SATURDAY || now.dayOfWeek == DayOfWeek.SUNDAY) {
             return SessionStatus.CLOSED
