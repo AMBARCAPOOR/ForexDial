@@ -12,7 +12,7 @@ import java.time.ZoneId
 import java.time.ZonedDateTime
 import java.time.format.DateTimeFormatter
 
-// XETRA | LSE | NYSE in one bitmap/one slot. Session status is pure local
+// TOKYO | LSE | NYSE in one bitmap/one slot. Session status is pure local
 // calendar math (MarketSessionCalculator) - no phone data dependency, so this
 // complication never returns null and needs no DataLayer refresh.
 class SessionRowComplicationService : SuspendingComplicationDataSourceService() {
@@ -56,12 +56,14 @@ class SessionRowComplicationService : SuspendingComplicationDataSourceService() 
         // already carries that information, the text was redundant. Freed
         // space used to double the exchange label (13->26) and grow the
         // time (24->32).
-        // Ambar 2026-07-30: "XETRA" (5 letters) is wider than "LSE"/"NYSE" at
-        // the same size, so it was poking slightly outside its circle. Sized
-        // per-exchange rather than dropping all three - only XETRA needed to
-        // shrink, LSE/NYSE stay at the full 26.
+        // Ambar 2026-07-30: a 5-letter label is wider than "LSE"/"NYSE" at the
+        // same size and poked outside its circle. Sized per-exchange rather
+        // than dropping all three. "TOKYO" replaced "XETRA" 2026-09-07 and is
+        // also 5 letters, so it inherits the same 22f without re-measuring.
+        // Left-most position kept: Tokyo opens first, so the row still reads
+        // west-to-east in session order.
         listOf(
-            Triple(ZoneId.of("Europe/Berlin"),    bw * 0.28f, MarketSessionCalculator.getXetraStatus()) to Pair("XETRA", 22f),
+            Triple(ZoneId.of("Asia/Tokyo"),       bw * 0.28f, MarketSessionCalculator.getTokyoStatus()) to Pair("TOKYO", 22f),
             Triple(ZoneId.of("Europe/London"),     bw * 0.5f, MarketSessionCalculator.getLseStatus()) to Pair("LSE", 26f),
             Triple(ZoneId.of("America/New_York"), bw * 0.72f, MarketSessionCalculator.getNyseStatus()) to Pair("NYSE", 26f)
         ).forEach { (triple, exchangeAndSize) ->
@@ -87,7 +89,7 @@ class SessionRowComplicationService : SuspendingComplicationDataSourceService() 
 
         return SmallImageComplicationData.Builder(
             smallImage = SmallImage.Builder(image = Icon.createWithBitmap(bitmap), type = SmallImageType.PHOTO).build(),
-            contentDescription = PlainComplicationText.Builder("XETRA, LSE, NYSE session status").build()
+            contentDescription = PlainComplicationText.Builder("Tokyo, LSE, NYSE session status").build()
         ).build()
     }
 }

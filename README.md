@@ -4,7 +4,7 @@
 
 A terminal-style forex watch face for **Wear OS 3+** (built and tested on a Samsung Galaxy Watch 7, Wear OS 6), with a phone companion app that fetches the data.
 
-Shows EUR/USD with pip-level precision, the DXY dollar index, BTC, the EUR–US 2-year yield spread, live market-session status for XETRA / LSE / NYSE, and price alerts that buzz your wrist and flash on screen when EUR/USD crosses a level you set.
+Shows EUR/USD with pip-level precision, the DXY dollar index, BTC, the EUR–US 2-year yield spread, live market-session status for Tokyo / LSE / NYSE, and price alerts that buzz your wrist and flash on screen when EUR/USD crosses a level you set.
 
 <p align="center">
   <img src="docs/screenshots/watchface.png" width="340" alt="ForexDial watch face">
@@ -26,7 +26,7 @@ Everything is colour-coded on one convention: **cyan = up, orange = down.** One 
 | Alert fired upward | Alert fired downward |
 |---|---|
 | <img src="docs/screenshots/alert-up.png" width="300" alt="Price alert firing upward"> | <img src="docs/screenshots/alert-down.png" width="300" alt="Price alert firing downward"> |
-| Bell + cyan arrow, flashing once a second. Europe open, New York still shut. | Orange arrow for a downward cross. London closed, New York open, Frankfurt post-close. |
+| Bell + cyan arrow, flashing once a second. | Orange arrow for a downward cross. |
 
 | Battery 20–50% | Battery under 20% |
 |---|---|
