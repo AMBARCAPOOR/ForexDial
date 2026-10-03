@@ -54,4 +54,8 @@ dependencies {
     compileOnly("com.google.android.wearable:wearable:2.9.0")
     implementation("androidx.wear:wear:1.3.0")
     implementation("androidx.core:core-ktx:1.13.1")
+
+    // Local JVM tests. MarketSessionCalculator is pure java.time with no
+    // Android dependency, so it needs no Robolectric or device.
+    testImplementation("junit:junit:4.13.2")
 }

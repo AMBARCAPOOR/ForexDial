@@ -1,6 +1,7 @@
 package com.reddoor3.forexdial.wear.session
 
 import java.time.DayOfWeek
+import java.time.Instant
 import java.time.LocalTime
 import java.time.ZoneId
 import java.time.ZonedDateTime
@@ -56,14 +57,20 @@ object MarketSessionCalculator {
         }
     }
 
-    fun getTokyoStatus():  SessionStatus = status(TOKYO,  LocalTime.of(9, 0), LocalTime.of(18, 0))
-    fun getLondonStatus(): SessionStatus = status(LONDON, LocalTime.of(8, 0), LocalTime.of(17, 0))
-    fun getNyStatus():     SessionStatus = status(NY,     LocalTime.of(8, 0), LocalTime.of(17, 0))
+    // `at` defaults to now. It is a parameter so this logic can be exercised at
+    // arbitrary instants - the weekend boundaries and the fortnight when New
+    // York has moved to DST and London has not are the cases most likely to be
+    // wrong, and none of them can be observed on demand. See
+    // MarketSessionCalculatorTest, which drives these same functions rather
+    // than a copy of them.
+    fun getTokyoStatus(at: Instant = Instant.now()):  SessionStatus = status(at, TOKYO,  LocalTime.of(9, 0), LocalTime.of(18, 0))
+    fun getLondonStatus(at: Instant = Instant.now()): SessionStatus = status(at, LONDON, LocalTime.of(8, 0), LocalTime.of(17, 0))
+    fun getNyStatus(at: Instant = Instant.now()):     SessionStatus = status(at, NY,     LocalTime.of(8, 0), LocalTime.of(17, 0))
 
-    private fun status(zone: ZoneId, open: LocalTime, close: LocalTime): SessionStatus {
+    private fun status(at: Instant, zone: ZoneId, open: LocalTime, close: LocalTime): SessionStatus {
         // One instant, read in two zones: the session's own for its hours, New
         // York's for the weekly gate.
-        val now = ZonedDateTime.now(zone)
+        val now = at.atZone(zone)
         if (!isMarketOpen(now.withZoneSameInstant(NY))) return SessionStatus.CLOSED
 
         val t = now.toLocalTime()
