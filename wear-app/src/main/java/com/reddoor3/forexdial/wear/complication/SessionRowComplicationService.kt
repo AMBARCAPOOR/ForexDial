@@ -12,7 +12,7 @@ import java.time.ZoneId
 import java.time.ZonedDateTime
 import java.time.format.DateTimeFormatter
 
-// TSE | LSE | NYSE in one bitmap/one slot. Session status is pure local
+// TOKYO | LONDON | NY in one bitmap/one slot. Session status is pure local
 // calendar math (MarketSessionCalculator) - no phone data dependency, so this
 // complication never returns null and needs no DataLayer refresh.
 class SessionRowComplicationService : SuspendingComplicationDataSourceService() {
@@ -58,15 +58,19 @@ class SessionRowComplicationService : SuspendingComplicationDataSourceService() 
         // time (24->32).
         // Ambar 2026-07-30: a 5-letter label is wider than "LSE"/"NYSE" at the
         // same size and poked outside its circle. Sized per-exchange rather
-        // than dropping all three. "XETRA" was replaced by "TSE" 2026-09-07 -
-        // at 3 letters it no longer needs the shrink, so it takes the full 26f
-        // like LSE/NYSE and every label on the row is now the same size.
-        // Left-most position kept: Tokyo opens first, so the row still reads
-        // in session order.
+        // than dropping all three, so each label is sized to its own width.
+        // 2026-10-02: switched from exchanges to FOREX SESSIONS, which are
+        // named for cities/regions rather than exchanges - so TSE/LSE/NYSE
+        // became TOKYO/LONDON/NY. "NEW YORK" spelled out is far too wide for
+        // an 84px circle at any readable size, hence NY. Sizes differ again
+        // because the names do (5/6/2 chars); TYO/LDN/NY would restore a
+        // uniform size if the mismatch grates.
+        // Left-most position kept: Tokyo opens first, so the row reads in
+        // session order.
         listOf(
-            Triple(ZoneId.of("Asia/Tokyo"),       bw * 0.28f, MarketSessionCalculator.getTseStatus()) to Pair("TSE", 26f),
-            Triple(ZoneId.of("Europe/London"),     bw * 0.5f, MarketSessionCalculator.getLseStatus()) to Pair("LSE", 26f),
-            Triple(ZoneId.of("America/New_York"), bw * 0.72f, MarketSessionCalculator.getNyseStatus()) to Pair("NYSE", 26f)
+            Triple(ZoneId.of("Asia/Tokyo"),       bw * 0.28f, MarketSessionCalculator.getTokyoStatus()) to Pair("TOKYO", 22f),
+            Triple(ZoneId.of("Europe/London"),     bw * 0.5f, MarketSessionCalculator.getLondonStatus()) to Pair("LONDON", 19f),
+            Triple(ZoneId.of("America/New_York"), bw * 0.72f, MarketSessionCalculator.getNyStatus()) to Pair("NY", 26f)
         ).forEach { (triple, exchangeAndSize) ->
             val (zone, x, status) = triple
             val (exchange, labelSize) = exchangeAndSize
@@ -90,7 +94,7 @@ class SessionRowComplicationService : SuspendingComplicationDataSourceService() 
 
         return SmallImageComplicationData.Builder(
             smallImage = SmallImage.Builder(image = Icon.createWithBitmap(bitmap), type = SmallImageType.PHOTO).build(),
-            contentDescription = PlainComplicationText.Builder("TSE, LSE, NYSE session status").build()
+            contentDescription = PlainComplicationText.Builder("Tokyo, London, New York forex session status").build()
         ).build()
     }
 }

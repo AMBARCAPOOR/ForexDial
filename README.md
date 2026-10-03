@@ -1,10 +1,10 @@
 # ForexDial
 
-**v1.0.0**
+**v1.1.0**
 
 A terminal-style forex watch face for **Wear OS 3+** (built and tested on a Samsung Galaxy Watch 7, Wear OS 6), with a phone companion app that fetches the data.
 
-Shows EUR/USD with pip-level precision, the DXY dollar index, BTC, the EUR–US 2-year yield spread, live market-session status for TSE / LSE / NYSE, and price alerts that buzz your wrist and flash on screen when EUR/USD crosses a level you set.
+Shows EUR/USD with pip-level precision, the DXY dollar index, BTC, the EUR–US 2-year yield spread, live forex-session status for Tokyo, London and New York, and price alerts that buzz your wrist and flash on screen when EUR/USD crosses a level you set.
 
 <p align="center">
   <img src="docs/screenshots/watchface.png" width="340" alt="ForexDial watch face">
@@ -18,10 +18,10 @@ Shows EUR/USD with pip-level precision, the DXY dollar index, BTC, the EUR–US 
 
 Everything is colour-coded on one convention: **cyan = up, orange = down.** One glance tells you direction without reading a number.
 
-| Bullish, all sessions open | Pre-market, all three |
+| Bullish, all sessions open | Pre-open, all three |
 |---|---|
-| <img src="docs/screenshots/state-bullish-open.png" width="300" alt="Bullish tape with all markets open"> | <img src="docs/screenshots/state-premarket.png" width="300" alt="All three exchanges in the pre-market window"> |
-| Rate rising, so the box, pips and yield go cyan. All three dials green. | Within an hour of the open — dials amber. Tape still cyan. |
+| <img src="docs/screenshots/state-bullish-open.png" width="300" alt="Bullish tape with all markets open"> | <img src="docs/screenshots/state-premarket.png" width="300" alt="All three forex sessions in the pre-open window"> |
+| Rate rising, so the box, pips and yield go cyan. All three dials green. | Within 30 minutes of the open — dials amber. Tape still cyan. |
 
 | Alert fired upward | Alert fired downward |
 |---|---|
@@ -150,7 +150,21 @@ The levels aren't an upper/lower pair — each one is watched in **both** direct
 - **EUR/USD** — last two digits are larger and direction-coloured; the box border tracks intraday direction.
 - **YIELD** — the EUR−US 2-year spread, coloured by **day-over-day change**: cyan if the spread rose (EUR rate advantage improved), orange if it fell. Note this is the *direction of the move*, not the level — orange on a negative spread means "got worse for EUR today."
 - **Battery candle** — cyan above 50%, amber 20–50%, red below 20%.
-- **Session dials** — green open, orange within an hour of open/close, red closed. Local exchange time inside each.
+- **Session dials** — green open, orange within 30 minutes of open/close, red closed. Local time inside each.
+
+**Forex session hours.** These are *forex* sessions, not stock-exchange hours — the
+two don't coincide. The FX week runs continuously from **Sunday 17:00** to **Friday
+17:00 New York time**, so Sunday evening is a trading session and Friday evening is not:
+
+| Session | Local hours | vs. the exchange in that city |
+|---|---|---|
+| Tokyo | 09:00–18:00 JST | TSE closes 15:30 and breaks for lunch; FX does neither |
+| London | 08:00–17:00 | LSE closes 16:30 |
+| New York | 08:00–17:00 ET | NYSE runs 09:30–16:00 |
+
+Each session is defined in its own city's local time, so each follows its own
+country's DST — London and New York shift on different dates and Japan doesn't
+shift at all, which means the gap between the dials changes a few times a year.
 
 ---
 
@@ -163,7 +177,7 @@ The levels aren't an upper/lower pair — each one is watched in **both** direct
 | BTC | Finnhub | 3 min | Yes |
 | EUR 2Y yield | ECB Data Portal (AAA euro-area curve) | 02:00 & 14:00 PT | No |
 | US 2Y yield | FRED (`DGS2`) | 02:00 & 14:00 PT | No |
-| Session status | Local calendar maths | continuous | No |
+| Session status | Local calendar maths (FX hours) | continuous | No |
 
 The yield legs are daily series, so they're polled twice a day rather than continuously. The spread is computed on the most recent day **both** sources cover — they publish on different lags, and pairing newest-with-newest silently spans two dates (measured ~4bp of error that way, enough to fake a day's move).
 
