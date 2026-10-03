@@ -1,5 +1,13 @@
 # ForexDial WFS Phase 1 — Remaining Steps
 
+> **SUPERSEDED - historical only.** This plans the face in Watch Face Studio, which
+> is not how it was built: WFS is a design tool, not the Watch Face Format the face
+> actually ships as. Two things below are also wrong as of v1.1.0: the session dials
+> are the TOKYO / LONDON / NY **forex** sessions, not XETRA / LSE / NYSE exchanges,
+> and their state comes from forex hours, not exchange hours. Session hours are
+> defined in exactly one place - `wear-app/.../wear/session/MarketSessionCalculator.kt`.
+> See HANDOFF_V1_07_28_2026.md §1b.
+
 Assets available in D:\ForexDial\assets\
 
 ---

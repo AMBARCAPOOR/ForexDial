@@ -4,8 +4,5 @@
     <string name="comp_eurusd_label">EUR/USD Price</string>
     <string name="comp_dxy_label">DXY Index</string>
     <string name="comp_btc_label">BTC Price</string>
-    <string name="comp_nyse_label">NYSE Session</string>
-    <string name="comp_xetra_label">XETRA Session</string>
-    <string name="comp_lse_label">LSE Session</string>
     <string name="comp_yield_label">Yield Spread</string>
 </resources>

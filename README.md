@@ -1,6 +1,6 @@
 # ForexDial
 
-**v1.1.0**
+**v1.1.1**
 
 A terminal-style forex watch face for **Wear OS 3+** (built and tested on a Samsung Galaxy Watch 7, Wear OS 6), with a phone companion app that fetches the data.
 

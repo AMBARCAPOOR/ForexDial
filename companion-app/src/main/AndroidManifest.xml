@@ -73,56 +73,8 @@
                 android:value="30"/>
         </service>
 
-        <!-- NYSE session dot — Circle slot -->
-        <service
-            android:name=".complication.NyseSessionComplicationService"
-            android:exported="true"
-            android:label="@string/comp_nyse_label"
-            android:permission="com.google.android.wearable.permission.BIND_COMPLICATION_PROVIDER">
-            <intent-filter>
-                <action android:name="androidx.wear.watchface.complications.ACTION_COMPLICATION_UPDATE_REQUEST"/>
-            </intent-filter>
-            <meta-data
-                android:name="android.support.wearable.complications.SUPPORTED_TYPES"
-                android:value="SHORT_TEXT,RANGED_VALUE"/>
-            <meta-data
-                android:name="android.support.wearable.complications.UPDATE_PERIOD_SECONDS"
-                android:value="60"/>
-        </service>
 
-        <!-- XETRA session dot — Circle slot -->
-        <service
-            android:name=".complication.XetraSessionComplicationService"
-            android:exported="true"
-            android:label="@string/comp_xetra_label"
-            android:permission="com.google.android.wearable.permission.BIND_COMPLICATION_PROVIDER">
-            <intent-filter>
-                <action android:name="androidx.wear.watchface.complications.ACTION_COMPLICATION_UPDATE_REQUEST"/>
-            </intent-filter>
-            <meta-data
-                android:name="android.support.wearable.complications.SUPPORTED_TYPES"
-                android:value="SHORT_TEXT,RANGED_VALUE"/>
-            <meta-data
-                android:name="android.support.wearable.complications.UPDATE_PERIOD_SECONDS"
-                android:value="60"/>
-        </service>
 
-        <!-- LSE session dot — Circle slot -->
-        <service
-            android:name=".complication.LseSessionComplicationService"
-            android:exported="true"
-            android:label="@string/comp_lse_label"
-            android:permission="com.google.android.wearable.permission.BIND_COMPLICATION_PROVIDER">
-            <intent-filter>
-                <action android:name="androidx.wear.watchface.complications.ACTION_COMPLICATION_UPDATE_REQUEST"/>
-            </intent-filter>
-            <meta-data
-                android:name="android.support.wearable.complications.SUPPORTED_TYPES"
-                android:value="SHORT_TEXT,RANGED_VALUE"/>
-            <meta-data
-                android:name="android.support.wearable.complications.UPDATE_PERIOD_SECONDS"
-                android:value="60"/>
-        </service>
 
         <!-- Yield spread complication — TBD slot (add in WFS) -->
         <service
