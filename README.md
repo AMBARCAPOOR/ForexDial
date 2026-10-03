@@ -18,11 +18,6 @@ Shows EUR/USD with pip-level precision, the DXY dollar index, BTC, the EUR–US 
 
 Everything is colour-coded on one convention: **cyan = up, orange = down.** One glance tells you direction without reading a number.
 
-| Bullish, all sessions open | Pre-open, all three |
-|---|---|
-| <img src="docs/screenshots/state-bullish-open.png" width="300" alt="Bullish tape with all markets open"> | <img src="docs/screenshots/state-premarket.png" width="300" alt="All three forex sessions in the pre-open window"> |
-| Rate rising, so the box, pips and yield go cyan. All three dials green. | Within 30 minutes of the open — dials amber. Tape still cyan. |
-
 | Alert fired upward | Alert fired downward |
 |---|---|
 | <img src="docs/screenshots/alert-up.png" width="300" alt="Price alert firing upward"> | <img src="docs/screenshots/alert-down.png" width="300" alt="Price alert firing downward"> |
@@ -33,7 +28,12 @@ Everything is colour-coded on one convention: **cyan = up, orange = down.** One 
 | <img src="docs/screenshots/battery-amber.png" width="300" alt="Battery candle in the amber band"> | <img src="docs/screenshots/battery-low.png" width="300" alt="Battery candle in the red band"> |
 | The candle turns amber and the fill drops with the charge. | Red below 20%. Wick, body and fill all shift together. |
 
-<sub>The market-state and alert shots are staged — the same rendering code fed fixed values, so a single screenshot session could show states that depend on the time of day or on price crossing a threshold. The hero image above and the battery shots are live.</sub>
+<sub>The hero and battery shots are live. The alert shots are staged, and their
+session dials are left over from <strong>v1.0.0</strong>, when the dials tracked stock
+exchanges — they read TSE / LSE / NYSE and their clocks do not hold a real set of
+timezone offsets. They are being regenerated; the face itself is correct. A pair of
+shots claiming all three sessions open at once has been removed outright: under forex
+hours Tokyo and New York never overlap, so that state cannot occur.</sub>
 
 ---
 
